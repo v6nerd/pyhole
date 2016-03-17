@@ -15,6 +15,9 @@ mkdir -p "$tmpdir/etc/pyhole"
 touch "$tmpdir/etc/pyhole/.keep"
 cp -R "$thisdir/../files" "$tmpdir/etc/pyhole"
 
+mkdir -p "$tmpdir/var/lib/pyhole"
+touch "$tmpdir/var/lib/.keep"
+
 dpkg-deb --build "$tmpdir" ~/pyhole.deb
 
 rm -rf "$tmpdir"
