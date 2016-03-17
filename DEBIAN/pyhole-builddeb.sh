@@ -5,7 +5,7 @@ tmpdir=$(mktemp --directory)
 
 mkdir -p "$tmpdir/DEBIAN"
 touch "$tmpdir/DEBIAN/.keep"
-cp -R "$thisdir/*" "$tmpdir/DEBIAN"
+cp -R "$thisdir/"* "$tmpdir/DEBIAN"
 
 mkdir -p "$tmpdir/usr/bin"
 touch "$tmpdir/usr/bin/.keep"
