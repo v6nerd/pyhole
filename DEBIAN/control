@@ -1,6 +1,7 @@
 Source: pyhole
 Maintainer: ryt51V
 Package: pyhole
+Version: 0.1.0
 Architecture: any
 Description: A clone of pi-hole written in Python.
 Depends: python3-dialog
