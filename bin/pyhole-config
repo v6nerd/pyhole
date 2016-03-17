@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# For running system commands
+import os
+# For getting the command line arguments we were run with.
+import sys
+# For ncurses dialogs
+from dialog import Dialog
+# For parsing the config file
+import configparser
+# For managing apt packages
+# https://apt.alioth.debian.org/python-apt-doc/library/apt.cache.html
+# https://apt.alioth.debian.org/python-apt-doc/library/apt.package.html
+import apt
+
+# If not root, rerun as root with sudo.
+if os.geteuid() != 0:
+    print("Rerunning as root with sudo...")
+    os.execvp("sudo", ["sudo"] + sys.argv)
+#end if os.geteuid() != 0:
+
+########################
+###     Variables    ###
+########################
+
+config_dir = '/etc/pyhole'
+share_dir  = '/usr/share/pyhole'
+var_dir    = '/var/lib/pyhole'
+
+########################
+###   Configuration  ###
+########################
+
+# Create a dialog object we will use for all ncurses dialogs.
+d = Dialog()
+d.set_background_title("pyhole-config")
+
+# Initialise our apt cache so we can check if packages are installed.
+apt_cache = apt.Cache()
+
+########################
+###     Functions    ###
+########################
+
+def welcome_message():
+    msg = "This program will configure your pyhole."
+    d.msgbox(msg)
+#end def welcome_message:
+
+def package_is_installed(package : str):
+    if package in apt_cache:
+        # Package is in the cache - not neccesarily installed
+        return apt_cache[package].is_installed
+    else:
+        # Package is not in the cache - can't be installed.
+        return False
+    #end else
+#end def package_is_installed(package):
+
+def package_install(package : str):
+    
+    if not package in apt_cache:
+        print("Package {0} is not in the apt cache.".format(package) )
+        raise
+    #end if not package in apt_cache:
+    
+    if apt_cache[package].is_installed:
+        print("Package {0} is already installed.".format(package) )
+        raise
+    #end if apt_cache[package].is_installed:
+    
+    apt_cache[package].mark_install
+    apt_cache.commit()
+    
+    # Reload the changes to apt-cache
+    apt_cache.open()
+    
+#end def package_install(package : str):
