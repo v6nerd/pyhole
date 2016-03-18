@@ -56,8 +56,8 @@ w = namedtuple('webserver',
               )
 
 web_servers = [
-    w('apache'  , 'apache2' , 'Install pyhole and pyhole-admin files and apache vhosts.' ),
     w('lighttpd', 'lighttpd', 'Install pyhole and pyhole-admin files and lighttpd hosts.'),
+    w('apache'  , 'apache2' , 'Install pyhole and pyhole-admin files and apache vhosts.' ),
     w('Manual'  , None      , 'Install pyhole and pyhole-admin files only.'),
 ]
 
@@ -154,9 +154,9 @@ def choose_web_server():
     d.msgbox(web_server_msgbox)
     
     if len(web_servers_installed) == 0:
-        web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel and install one of the supported web servers above.  Otherwise you may proceed with manual configuration."
+        web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel and install one of the supported web servers above.  Otherwise you may proceed with manual configuration.\n\nIf you are unsure, cancel this config and run the following before continuing:\n\nsudo apt-get install lighttpd"
     else:
-        web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option."
+        web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option.\n\nIf you are unsure, choose {0}."
     #end else:
     
     button, answer = d.menu(web_server_message, choices=choices)
@@ -168,7 +168,7 @@ def choose_web_server():
 #end def choose_web_server():
 
 def choose_web_roots():
-    
+    """Allow the user to choose web roots."""
     web_root_message = "Choose where you would like pyhole to install the virtual hosts."
     
     elements = [
@@ -185,6 +185,7 @@ def choose_web_roots():
 #end def chooce_web_roots():
 
 def choose_interface():
+    """Allow the user to choose their network interface."""
     interfaces = netifaces.interfaces()
     
     choices = []
@@ -195,7 +196,7 @@ def choose_interface():
         #end if i != "lo":
     #end for i in interfaces:
     
-    message = "Please select a network interface."
+    message = "Please select a network interface.\n\nIf you are unsure, eth0 is almost always the best choice if you are using a wired connection."
     
     button, answer = d.radiolist(message, choices=choices)
     
@@ -206,14 +207,14 @@ def choose_interface():
 #end def choose_interface():
 
 def choose_ipv4_ipv6():
-    
+    """Allow the user to choose IPv4 and/or IPv6."""
     # Our choice of protocols.
     choices = [
         ('IPv4', "", True ),
         ('IPv6', "", False)
     ]
     
-    message = 'Please select protocols.'
+    message = 'Please select protocols.\n\nIf you are unsure, leave these as they are.'
     
     button, answer = d.checklist(text = message, choices=choices)
     
@@ -224,7 +225,7 @@ def choose_ipv4_ipv6():
 #end def choose_ipv4_ipv6():
 
 def choose_ipv4_address(interface: str):
-    
+    """Allow the user to choose their IPv4 address on the provided interface."""
     # Get the IPv4 addresses on the given interface
     # AF_INET represents IPv4
     addrs = netifaces.ifaddresses(interface)[netifaces.AF_INET]
@@ -240,7 +241,7 @@ def choose_ipv4_address(interface: str):
         i += 1
     #end for a in addr:
     
-    message = "Please select an IPv4 address on interface {0}.".format(interface)
+    message = "Please select an IPv4 address on interface {0}.\n\nIf you are unsure, choose the first one.".format(interface)
     
     button, answer = d.radiolist(text = message, choices=choices)
     
@@ -250,6 +251,60 @@ def choose_ipv4_address(interface: str):
     return addrs[int(answer)]
     
 #def choose_ipv4_address():
+
+def choose_ipv4_reconfigure(interface : str, ipv4_address):
+    """Check whether the IPv4 address is static."""
+    
+    # There does not seem to be a decent way to tell whether or not an IPv4 address is static.
+    # We will look in the file /etc/network/interfaces for the phrases below and judge.
+    #   'iface <interface name> inet static'
+    #   'iface <interface name> inet dhcp'
+    # Yes this could fail for many reasons including use of /etc/network/interfaces, so we won't
+    # make hard decisions based on this.
+    
+    ipv4_address_type = 'unknown'
+    
+    static_search_string    = 'iface {0} inet static'.format(interface)
+    dynamic_search_string   = 'iface {0} inet dhcp'.format(interface)
+    
+    with open('/etc/network/interfaces', 'r') as f:
+        interfaces_file = f.read()
+    #end with open('/etc/network/interfaces', 'r') as f:
+    
+    if static_search_string in interfaces_file:
+        ipv4_address_type = 'static'
+    elif dynamic_search_string in interfaces_file:
+        ipv4_address_type = 'dynamic'
+    #end elif dynamic_search_string in interfaces_file:
+    
+    message = "As Pyhole will be running a DNS server, it is essential that your internal IPv4 address is static.  A dynamic IPv4 address is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)\n\n"
+    
+    if ipv4_address_type == 'static':
+        message += "It looks like your IPv4 address {0[addr]} on interface {1} is already static, which is good.\n\n".format(ipv4_address, interface)
+    elif ipv4_address_type == 'dynamic':
+        message += "It looks like your IPv4 address {0[addr]} on interface {1} is dynamic.  You need to have a static IP.\n\n".format(ipv4_address, interface)
+    else:
+        message += "We're unable to tell whether your address {0[addr]} on interface {1} is dynamic or static.\n\n".format(ipv4_address, interface)
+    #end else:
+    
+    if ipv4_address_type == 'static':
+        message += "If you are unsure, choose to keep your current network settings."
+    else:
+        message += "Pyhole can set a static IPv4 address for you, though if you know how to set one yourself within Linux it is recommended you configure this outside of Pyhole.\n\nIf you are unsure, choose to configure a static IPv4 address."
+    #end else:
+    
+    choices = [
+        ( "Keep"  , "Keep my IPv4 address settings as is." ),
+        ( "Configure", "Configure a static IPv4 address for me." )
+    ]
+    
+    button, answer = d.menu(message, choices=choices)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    return answer
+    
+#end def check_ipv4_static():
 
 ########################
 ###       Begin      ###
@@ -266,9 +321,10 @@ protocols = choose_ipv4_ipv6()
 
 if 'IPv4' in protocols:
     ipv4_address = choose_ipv4_address(interface)
+    ipv4_reconfigure = choose_ipv4_reconfigure(interface, ipv4_address)
 #end if 'IPv4' in protocols:
 
-if 'IPv6 in protocols:
+if 'IPv6' in protocols:
     pass
 #end if 'IPv6' in protocols:
 
