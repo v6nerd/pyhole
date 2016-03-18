@@ -13,7 +13,10 @@ cp -R "$thisdir/../bin/"* "$tmpdir/usr/bin"
 
 mkdir -p "$tmpdir/etc/pyhole"
 touch "$tmpdir/etc/pyhole/.keep"
-cp -R "$thisdir/../files" "$tmpdir/etc/pyhole"
+
+mkdir -p "$tmpdir/usr/share/pyhole"
+touch "$tmpdir/usr/share/pyhole"
+cp -R "$thisdir/../files/*" "$tmpdir/usr/share/pyhole"
 
 mkdir -p "$tmpdir/var/lib/pyhole"
 touch "$tmpdir/var/lib/.keep"

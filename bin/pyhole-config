@@ -16,6 +16,8 @@
 import os
 # For getting the command line arguments we were run with.
 import sys
+# For named tuples
+from collections import namedtuple
 # For ncurses dialogs
 from dialog import Dialog
 # For parsing the config file
@@ -39,12 +41,26 @@ config_dir = '/etc/pyhole'
 share_dir  = '/usr/share/pyhole'
 var_dir    = '/var/lib/pyhole'
 
+# Define the web server named tuple
+w = namedtuple('webserver',
+               'name, package_name, install_description'
+              )
+
+web_servers = [
+    w('apache'  , 'apache2' , 'Install pyhole and pyhole-admin files and apache vhosts.' ),
+    w('lighttpd', 'lighttpd', 'Install pyhole and pyhole-admin files and lighttpd hosts.'),
+    w('Manual'  , None      , 'Install pyhole and pyhole-admin files only.'),
+]
+
+apache_package   = 'apache2'
+lighttpd_package = 'lighttpd'
+
 ########################
 ###   Configuration  ###
 ########################
 
 # Create a dialog object we will use for all ncurses dialogs.
-d = Dialog()
+d = Dialog(autowidgetsize = True)
 d.set_background_title("pyhole-config")
 
 # Initialise our apt cache so we can check if packages are installed.
@@ -54,12 +70,20 @@ apt_cache = apt.Cache()
 ###     Functions    ###
 ########################
 
+def cancel_pressed():
+    """Gracefully exit the script.  To be run whenever a user chooses cancel."""
+    print("Cancel button pressed.  Exiting...")
+    sys.exit()
+#end def cancel_pressed():
+
 def welcome_message():
+    """Display any welcome messages."""
     msg = "This program will configure your pyhole."
     d.msgbox(msg)
 #end def welcome_message:
 
 def package_is_installed(package : str):
+    """Return whether a package is installed."""
     if package in apt_cache:
         # Package is in the cache - not neccesarily installed
         return apt_cache[package].is_installed
@@ -70,7 +94,7 @@ def package_is_installed(package : str):
 #end def package_is_installed(package):
 
 def package_install(package : str):
-    
+    """Install a package"""
     if not package in apt_cache:
         print("Package {0} is not in the apt cache.".format(package) )
         raise
@@ -88,3 +112,49 @@ def package_install(package : str):
     apt_cache.open()
     
 #end def package_install(package : str):
+
+def choose_web_server():
+    """Allow the user to choose the web server they want."""
+    
+    # Find out which of our choices are available.
+    choices = []
+    web_servers_installed = []
+    
+    for ws in web_servers:
+        # The item for the "choice" list that we will pass to the menu dialog.
+        choice = ( ws.name, ws.install_description )
+        
+        if ws.name == "Manual":
+            # Manual is always an option.
+            choices.append(choice)
+        elif package_is_installed(ws.package_name):
+            # Web servers are only an option if their package is installed.
+            choices.append(choice)
+            web_servers_installed.append(ws.package_name)
+        #end if package_is_installed(ws['package_name']):
+    #end for ws in web_servers:
+    
+    web_server_msgbox = "Pyhole requires a web server with two virtual hosts - one to serve an empty page that replaces ads, and one for the admin web interface to view stats and whitelist or blacklist ad servers.\n\n"
+    
+    web_server_msgbox += "Pyhole can automatically configure certain web servers for you if they are already installed.  Alternatively, pyhole can just install the web server files for you to use with a web server you configure manually yourself.\n\nThe web servers supported for automatic configuration are as follows:\n\n"
+    
+    for ws in web_servers:
+        if ws.name != 'Manual': web_server_msgbox += "{0}\n".format(ws.package_name)
+    #end for w in web_servers:
+    
+    d.msgbox(web_server_msgbox)
+    
+    if len(web_servers_installed) == 0:
+        web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel and install one of the supported web servers above.  Otherwise you may proceed with manual configuration."
+    else:
+        web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option."
+    #end else:
+    
+    button, choice = d.menu(web_server_message, choices=choices)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    return choice
+    
+#end def choose_web_server():
+
