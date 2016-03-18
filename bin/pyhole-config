@@ -46,6 +46,7 @@ if os.geteuid() != 0:
 ###     Variables    ###
 ########################
 
+# These should already exist if installed by the .deb package.
 config_dir = '/etc/pyhole'
 share_dir  = '/usr/share/pyhole'
 var_dir    = '/var/lib/pyhole'
@@ -55,14 +56,12 @@ w = namedtuple('webserver',
                'name, package_name, install_description'
               )
 
+# Define the web server packages and their properties.
 web_servers = [
     w('lighttpd', 'lighttpd', 'Install pyhole and pyhole-admin files and lighttpd hosts.'),
     w('apache'  , 'apache2' , 'Install pyhole and pyhole-admin files and apache vhosts.' ),
     w('Manual'  , None      , 'Install pyhole and pyhole-admin files only.'),
 ]
-
-apache_package   = 'apache2'
-lighttpd_package = 'lighttpd'
 
 ########################
 ###   Configuration  ###
@@ -147,6 +146,7 @@ def choose_web_server():
     
     web_server_msgbox += "pyhole can automatically configure certain web servers for you if they are already installed.  Alternatively, pyhole can just install the web server files for you to use with a web server you configure manually yourself.\n\nThe web servers supported for automatic configuration are as follows:\n\n"
     
+    # Display one web server on each line, except Manual of course.
     for ws in web_servers:
         if ws.name != 'Manual': web_server_msgbox += "{0}\n".format(ws.package_name)
     #end for w in web_servers:
@@ -154,7 +154,7 @@ def choose_web_server():
     d.msgbox(web_server_msgbox)
     
     if len(web_servers_installed) == 0:
-        web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel and install one of the supported web servers above.  Otherwise you may proceed with manual configuration.\n\nIf you are unsure, cancel this config and run the following before continuing:\n\nsudo apt-get install lighttpd"
+        web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel pyhole-config and install one of the supported web servers above.  Otherwise you may proceed with manual configuration.\n\nIf you are unsure, cancel this config and run the following before continuing:\n\nsudo apt-get install lighttpd"
     else:
         web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option.\n\nIf you are unsure, choose {0}.".format(choices[0])
     #end else:
@@ -172,8 +172,8 @@ def choose_web_roots():
     web_root_message = "Choose where you would like pyhole to install the virtual hosts.\n\nIf you are unsure, leave these as the default."
     
     elements = [
-        ("pihole"      , 2, 2, "/var/www/pyhole"      , 2, 20, 50, 255),
-        ("pihole-admin", 4, 2, "/var/www/pyhole-admin", 4, 20, 50, 255)
+        ("pyhole"      , 2, 2, "/var/www/pyhole"      , 2, 20, 50, 255),
+        ("pyhole-admin", 4, 2, "/var/www/pyhole-admin", 4, 20, 50, 255)
     ]
     
     button, answer = d.form(web_root_message, elements = elements, form_height = 5)
@@ -252,6 +252,36 @@ def choose_ipv4_address(interface: str):
     
 #def choose_ipv4_address():
 
+def choose_ipv6_address(interface: str):
+    """Allow the user to choose their IPv6 address on the provided interface."""
+    # Get the IPv6 addresses on the given interface
+    # AF_INET6 represents IPv6
+    addrs = netifaces.ifaddresses(interface)[netifaces.AF_INET6]
+    
+    # Get all of our choices
+    # We index them as we want to return the full addr object.
+    choices = []
+    i = 0
+    for a in addrs:
+        description = "addr {0[addr]}  netmask {0[netmask]}".format(a)
+        # The first argument needs to be a string; it won't work with int.
+        choices.append( ( str(i), description, False ) )
+        i += 1
+    #end for a in addr:
+    
+    message = "Please select an IPv6 address on interface {0}.\n\n".format(interface)
+    
+    message += "If you wish to use IPv6, we assume you know what you are doing - this should be a static address.  We won't perform any further checks or offer to reconfigure it for you."
+    
+    button, answer = d.radiolist(text = message, choices=choices)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    # Get the object represented by the chosen list item.
+    return addrs[int(answer)]
+    
+#def choose_ipv6_address():
+
 def choose_ipv4_reconfigure(interface : str, ipv4_address):
     """Check whether the IPv4 address is static."""
     
@@ -306,7 +336,29 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
     
     return answer
     
-#end def check_ipv4_static():
+#end def choose_ipv4_reconfigure(interface : str, ipv4_address):
+
+def choose_ipv4_new_static(interface: str, ipv4_address):
+    
+    gateway = netifaces.gateways()['default'][netifaces.AF_INET]
+    
+    elements = [
+        ("address", 2, 2, ipv4_address['addr']   , 2, 20, 25, 25),
+        ("netmask", 4, 2, ipv4_address['netmask'], 4, 20, 25, 25),
+        ("gateway", 6, 2, gateway[0]             , 6, 20, 25, 25)
+    ]
+    
+    message = "Please enter your desired static IPv4 settings.\n\n"
+    
+    message += "If you are unsure, you can leave them as is.  It is possible your router could still try to assign this IPv4 address to a device, which would cause a conflict, but in most cases the router is smart enough to not do that and the device is smart enough not to accept the IP.  If you are worried, set the address to one outside your DHCP pool and/or make a DHCP reservation for the IPv4 address you set here."
+    
+    button, answer = d.form(message, elements = elements, form_height = 7)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    return answer
+    
+#end def choose_ipv4_new_static(interface: str, ipv4_address):
 
 ########################
 ###       Begin      ###
@@ -320,7 +372,7 @@ welcome_message()
 
 # Choose a web server and web root paths.
 web_server = choose_web_server()
-pihole_web_root, pihole_admin_web_root = choose_web_roots()
+pyhole_web_root, pyhole_admin_web_root = choose_web_roots()
 
 ########################
 ### IP addresses
@@ -342,9 +394,13 @@ protocols = choose_ipv4_ipv6()
 if 'IPv4' in protocols:
     ipv4_address = choose_ipv4_address(interface)
     ipv4_reconfigure = choose_ipv4_reconfigure(interface, ipv4_address)
+    
+    if ipv4_reconfigure == "Configure":
+        addr, netmask, gateway = choose_ipv4_new_static(interface, ipv4_address)
+    #end if ipv4_reconfigure == "Configure":
 #end if 'IPv4' in protocols:
 
 if 'IPv6' in protocols:
-    pass
+    ipv6_address = choose_ipv6_address(interface)
 #end if 'IPv6' in protocols:
 
