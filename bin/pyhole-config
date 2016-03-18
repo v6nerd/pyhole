@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# pyhole - a clone of the Pi-hole DNS adblocker, written in Python.
+# pyhole  (c) 2016 by ryt51V
+# Pi-Hole (c) 2015, 2016 by Jacob Salmela
+
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3 of the License.
@@ -19,6 +23,8 @@ import sys
 # For named tuples
 from collections import namedtuple
 # For ncurses dialogs
+# http://pythondialog.sourceforge.net/doc/Dialog_class_overview.html
+# http://pythondialog.sourceforge.net/doc/widgets.html
 from dialog import Dialog
 # For parsing the config file
 import configparser
@@ -26,6 +32,9 @@ import configparser
 # https://apt.alioth.debian.org/python-apt-doc/library/apt.cache.html
 # https://apt.alioth.debian.org/python-apt-doc/library/apt.package.html
 import apt
+# For IP addresses
+import netifaces
+
 
 # If not root, rerun as root with sudo.
 if os.geteuid() != 0:
@@ -150,11 +159,116 @@ def choose_web_server():
         web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option."
     #end else:
     
-    button, choice = d.menu(web_server_message, choices=choices)
+    button, answer = d.menu(web_server_message, choices=choices)
     
     if button == d.CANCEL: cancel_pressed()
     
-    return choice
+    return answer
     
 #end def choose_web_server():
+
+def choose_web_roots():
+    
+    web_root_message = "Choose where you would like pyhole to install the virtual hosts."
+    
+    elements = [
+        ("pihole"      , 2, 2, "/var/www/pihole"      , 2, 20, 50, 255),
+        ("pihole-admin", 4, 2, "/var/www/pihole-admin", 4, 20, 50, 255)
+    ]
+    
+    button, answer = d.form(web_root_message, elements = elements, form_height = 5)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    return answer
+    
+#end def chooce_web_roots():
+
+def choose_interface():
+    interfaces = netifaces.interfaces()
+    
+    choices = []
+    for i in interfaces:
+        choice = ( i, "", False )
+        if i != "lo":
+            choices.append(choice)
+        #end if i != "lo":
+    #end for i in interfaces:
+    
+    message = "Please select a network interface."
+    
+    button, answer = d.radiolist(message, choices=choices)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    return answer
+    
+#end def choose_interface():
+
+def choose_ipv4_ipv6():
+    
+    # Our choice of protocols.
+    choices = [
+        ('IPv4', "", True ),
+        ('IPv6', "", False)
+    ]
+    
+    message = 'Please select protocols.'
+    
+    button, answer = d.checklist(text = message, choices=choices)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    return answer
+    
+#end def choose_ipv4_ipv6():
+
+def choose_ipv4_address(interface: str):
+    
+    # Get the IPv4 addresses on the given interface
+    # AF_INET represents IPv4
+    addrs = netifaces.ifaddresses(interface)[netifaces.AF_INET]
+    
+    # Get all of our choices
+    # We index them as we want to return the full addr object.
+    choices = []
+    i = 0
+    for a in addrs:
+        description = "addr {0[addr]}  netmask {0[netmask]}  broadcast {0[broadcast]}".format(a)
+        # The first argument needs to be a string; it won't work with int.
+        choices.append( ( str(i), description, False ) )
+        i += 1
+    #end for a in addr:
+    
+    message = "Please select an IPv4 address on interface {0}.".format(interface)
+    
+    button, answer = d.radiolist(text = message, choices=choices)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    # Get the object represented by the chosen list item.
+    return addrs[int(answer)]
+    
+#def choose_ipv4_address():
+
+########################
+###       Begin      ###
+########################
+
+# Choose a web server and web root paths.
+web_server = choose_web_server()
+pihole_web_root, pihole_admin_web_root = choose_web_roots()
+
+# Choose an interface, whether using IPv4 and/or IPv6, and addresses.
+interface = choose_interface()
+
+protocols = choose_ipv4_ipv6()
+
+if 'IPv4' in protocols:
+    ipv4_address = choose_ipv4_address(interface)
+#end if 'IPv4' in protocols:
+
+if 'IPv6 in protocols:
+    pass
+#end if 'IPv6' in protocols:
 

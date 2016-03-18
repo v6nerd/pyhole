@@ -6,4 +6,4 @@ Architecture: all
 Description: A clone of pi-hole written in Python.
 # We want either lighttpd or apache, and if apache2 then also libapache2-mod-php5.
 # libapache2-mod-php5 depends on apache2, so easy to say lighttpd or libapache2-mod-php5
-Depends: sudo, dnsmasq, python3, python3-dialog, python3-apt, php5-common, php5-cgi, php5, lighttpd | libapache2-mod-php5
+Depends: sudo, dnsmasq, python3, python3-dialog, python3-netifaces, python3-apt, php5-common, php5-cgi, php5, lighttpd | libapache2-mod-php5
