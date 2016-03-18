@@ -87,8 +87,8 @@ def cancel_pressed():
 
 def welcome_message():
     """Display any welcome messages."""
-    msg = "This program will configure your pyhole."
-    d.msgbox(msg)
+    message = "This program will configure your pyhole."
+    d.msgbox(message)
 #end def welcome_message:
 
 def package_is_installed(package : str):
@@ -143,9 +143,9 @@ def choose_web_server():
         #end if package_is_installed(ws['package_name']):
     #end for ws in web_servers:
     
-    web_server_msgbox = "Pyhole requires a web server with two virtual hosts - one to serve an empty page that replaces ads, and one for the admin web interface to view stats and whitelist or blacklist ad servers.\n\n"
+    web_server_msgbox = "pyhole requires a web server with two virtual hosts - one to serve an empty page that replaces ads, and one for the admin web interface to view stats and whitelist or blacklist ad servers.\n\n"
     
-    web_server_msgbox += "Pyhole can automatically configure certain web servers for you if they are already installed.  Alternatively, pyhole can just install the web server files for you to use with a web server you configure manually yourself.\n\nThe web servers supported for automatic configuration are as follows:\n\n"
+    web_server_msgbox += "pyhole can automatically configure certain web servers for you if they are already installed.  Alternatively, pyhole can just install the web server files for you to use with a web server you configure manually yourself.\n\nThe web servers supported for automatic configuration are as follows:\n\n"
     
     for ws in web_servers:
         if ws.name != 'Manual': web_server_msgbox += "{0}\n".format(ws.package_name)
@@ -156,7 +156,7 @@ def choose_web_server():
     if len(web_servers_installed) == 0:
         web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel and install one of the supported web servers above.  Otherwise you may proceed with manual configuration.\n\nIf you are unsure, cancel this config and run the following before continuing:\n\nsudo apt-get install lighttpd"
     else:
-        web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option.\n\nIf you are unsure, choose {0}."
+        web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option.\n\nIf you are unsure, choose {0}.".format(choices[0])
     #end else:
     
     button, answer = d.menu(web_server_message, choices=choices)
@@ -169,11 +169,11 @@ def choose_web_server():
 
 def choose_web_roots():
     """Allow the user to choose web roots."""
-    web_root_message = "Choose where you would like pyhole to install the virtual hosts."
+    web_root_message = "Choose where you would like pyhole to install the virtual hosts.\n\nIf you are unsure, leave these as the default."
     
     elements = [
-        ("pihole"      , 2, 2, "/var/www/pihole"      , 2, 20, 50, 255),
-        ("pihole-admin", 4, 2, "/var/www/pihole-admin", 4, 20, 50, 255)
+        ("pihole"      , 2, 2, "/var/www/pyhole"      , 2, 20, 50, 255),
+        ("pihole-admin", 4, 2, "/var/www/pyhole-admin", 4, 20, 50, 255)
     ]
     
     button, answer = d.form(web_root_message, elements = elements, form_height = 5)
@@ -277,7 +277,7 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
         ipv4_address_type = 'dynamic'
     #end elif dynamic_search_string in interfaces_file:
     
-    message = "As Pyhole will be running a DNS server, it is essential that your internal IPv4 address is static.  A dynamic IPv4 address is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)\n\n"
+    message = ""
     
     if ipv4_address_type == 'static':
         message += "It looks like your IPv4 address {0[addr]} on interface {1} is already static, which is good.\n\n".format(ipv4_address, interface)
@@ -287,10 +287,12 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
         message += "We're unable to tell whether your address {0[addr]} on interface {1} is dynamic or static.\n\n".format(ipv4_address, interface)
     #end else:
     
+    message += "Choose whether to keep your existing IPv4 address settings or reconfigure them."
+    
     if ipv4_address_type == 'static':
         message += "If you are unsure, choose to keep your current network settings."
     else:
-        message += "Pyhole can set a static IPv4 address for you, though if you know how to set one yourself within Linux it is recommended you configure this outside of Pyhole.\n\nIf you are unsure, choose to configure a static IPv4 address."
+        message += "If you are unsure, choose to configure a static IPv4 address."
     #end else:
     
     choices = [
@@ -310,9 +312,27 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
 ###       Begin      ###
 ########################
 
+# Welcome!
+welcome_message()
+
+########################
+### Web Server
+
 # Choose a web server and web root paths.
 web_server = choose_web_server()
 pihole_web_root, pihole_admin_web_root = choose_web_roots()
+
+########################
+### IP addresses
+
+ip_message = """As pyhole will be running a DNS server, it is essential that your internal IP address is static.  A dynamic IP is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)
+
+pyhole can set a static IP address for you, though if you know how to set one yourself within Linux it is recommended you configure this outside of pyhole.
+
+Furthermore, if you are already running another web server, it is strongly recommended to configure a SECOND static IP address for pyhole.  This is outside the scope of pyhole-config.
+"""
+
+d.msgbox(ip_message)
 
 # Choose an interface, whether using IPv4 and/or IPv6, and addresses.
 interface = choose_interface()
