@@ -575,9 +575,15 @@ def choose_dns_provider():
     
 # def choose_dns_provider():
 
+def install_configs():
+
+#end def install_configs()
+
 ########################
-###       Begin      ###
+###   Gather Info    ###
 ########################
+
+# Gather information from the user, but don't make any changes.
 
 # Welcome!
 show_welcome_message()
@@ -627,3 +633,10 @@ if 'IPv6' in protocols:
 
 # Choose upstream DNS servers
 dns_provider = choose_dns_provider()
+
+
+########################
+###     Configure    ###
+########################
+
+# Start configuring!
