@@ -16,7 +16,7 @@ touch "$tmpdir/etc/pyhole/.keep"
 
 mkdir -p "$tmpdir/usr/share/pyhole"
 touch "$tmpdir/usr/share/pyhole"
-cp -R "$thisdir/../files/*" "$tmpdir/usr/share/pyhole"
+cp -R "$thisdir/../files/"* "$tmpdir/usr/share/pyhole"
 
 mkdir -p "$tmpdir/var/lib/pyhole"
 touch "$tmpdir/var/lib/.keep"
