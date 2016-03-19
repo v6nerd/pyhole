@@ -64,10 +64,17 @@ def valid_port(port):
 
 config = configparser.ConfigParser()
 
-# Read the config.  This doesn't seem to error if the file doesn't exist.
-config.read(conf_file_path)
+def read_config():
+    """Read the pyhole config from file."""
+    global config
+    global conf_file_path
+    
+    # Note: Reading the config does not seem to fail if it does not exist.
+    config.read(conf_file_path)
+#end def read_config():
 
 def write_config():
+    """Write the pyhole config to file."""
     global config
     global conf_file_path
     
@@ -77,3 +84,5 @@ def write_config():
     
 #end def write_config:
 
+# Read the config
+read_config()
