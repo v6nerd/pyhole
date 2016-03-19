@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# For running system commands
+# For running system commands and setting permissions.
 import os
 # For getting the command line arguments we were run with.
 import sys
@@ -34,6 +34,8 @@ import configparser
 import apt
 # For looking up interfaces and IP addresses.
 import netifaces
+# For file operations including ownership
+import shutil
 # Our very own module!
 from pyhole import pyhole
 
@@ -619,6 +621,43 @@ def install_dnsmasq_config(dns_provider, interface : str):
     
 #end def install_dnsmasq_config(dns_provider, interface : str):
 
+def install_webserver_config(web_server):
+    
+    if web_server == "lighttpd":
+        pass
+    elif web_server == "apache":
+        pass
+    #end elif web_server == "apache":
+    
+#end def install_webserver_config(web_server):
+
+def install_sudoers_file():
+    sudoers_file_in  = os.path.join(pyhole.share_dir, 'conf/sudoers.d/pyhole')
+    sudoers_file_out = '/etc/sudoers.d/pyhole'
+    
+    # Mode 440 as in /etc/sudoers.d/README
+    shutil.copy(sudoers_file_in, sudoers_file_out)
+    os.chmod(sudoers_file_out, mode = 0o440 )
+#end def install_sudoers_file():
+
+def create_pyhole_user():
+    # We are OK to just go ahead and run useradd even if the user already exists.
+    # A message will display but this is not a problem.
+    # For reference, the exit code is 9 when the user already exists.
+    os.system("useradd --system --shell /usr/sbin/nologon pyhole")
+#end def create_pyhole_user:
+
+def set_dir_permissions():
+    # /var/lib/pyhole needs to have group owner pyhole
+    # and be group writeable.
+    shutil.chown(pyhole.var_dir, user = 'root', group = 'pyhole')
+    os.chmod(pyhole.var_dir, mode = 0o775 )
+    
+    # That's it.
+    # /etc/pyhole should root writeable like anything else in /etc.
+    # Ditto with /usr/share/pyhole.
+#end def set_dir_permissions():
+
 ########################
 ###   Gather Info    ###
 ########################
@@ -633,7 +672,7 @@ show_welcome_message()
 
 # Choose a web server and web root paths.
 web_server = choose_web_server()
-pyhole_web_root, pyhole_admin_web_root = choose_web_roots()
+web_root_pyhole, web_root_admin = choose_web_roots()
 
 if web_server == 'Manual':
     password_message = """The pyhole admin interface needs to be protected from unauthorised access.  You have chosen for Pi-Hole to install to a manually configured web server, so please make sure to configure authentication, for example with a username and password."""
@@ -665,7 +704,10 @@ interface = choose_interface()
 
 protocols = choose_ipv4_ipv6()
 
-if 'IPv4' in protocols:
+use_ipv4 = 'IPv4' in protocols
+use_ipv6 = 'IPv6' in protocols
+
+if use_ipv4:
     ipv4_address = choose_ipv4_address(interface)
     ipv4_reconfigure = choose_ipv4_reconfigure(interface, ipv4_address)
     
@@ -675,7 +717,7 @@ if 'IPv4' in protocols:
     #end if ipv4_reconfigure == "Configure":
 #end if 'IPv4' in protocols:
 
-if 'IPv6' in protocols:
+if use_ipv6:
     ipv6_address = choose_ipv6_address(interface)
 #end if 'IPv6' in protocols:
 
@@ -692,5 +734,28 @@ dns_provider = choose_dns_provider()
 
 # Start configuring!
 
+# Write pyhole conf file.
+
+pyhole.config['Network']                = {}
+pyhole.config['Network']['interface']   = interface
+pyhole.config['Network']['use_ipv4']    = str(use_ipv4)
+pyhole.config['Network']['use_ipv6']    = str(use_ipv6)
+pyhole.config['Network']['ipv4_addr']   = ipv4_address['addr']
+
+pyhole.config['WebServer']                      = {}
+pyhole.config['WebServer']['web_server']        = web_server
+pyhole.config['WebServer']['web_root_pyhole']   = web_root_pyhole
+pyhole.config['WebServer']['web_root_admin']    = web_root_admin
+
+pyhole.write_config()
+
+# Write / copy config.
+
 install_dnsmasq_config(dns_provider, interface)
+install_sudoers_file()
+
+# Create pyhole user and set permissions.
+
+create_pyhole_user()
+set_dir_permissions()
 
