@@ -1,7 +1,7 @@
 <?php
     $domains = Array();
     $log = Array();
-    $ipv6 = file_exists("/etc/pihole/.useIPv6");
+    $ipv6 = file_exists("/etc/pyhole/.useIPv6");
 
     /*******   Public Members ********/
     function getSummaryData() {
@@ -141,12 +141,12 @@
     function readInBlockList() {
         global $domains;
         return count($domains) > 1 ? $domains :
-            file("/var/lib/pihole/gravity.list");
+            file("/var/lib/pyhole/gravity.list");
     }
     function readInLog() {
         global $log;
         return count($log) > 1 ? $log :
-            file("/var/log/pihole.log");
+            file("/var/log/pyhole.log");
     }
     function getDnsQueries($log) {
         return array_filter($log, "findQueries");

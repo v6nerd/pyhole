@@ -681,9 +681,16 @@ def install_webserver(web_root_pyhole, web_root_admin):
     admin_in   = os.path.join(pyhole.share_dir, 'www/pyhole-admin/admin')
     admin_out  = os.path.join(web_root_admin  , 'admin'                 )
     
+    # copytree requires the destination does not exist.
+    # So we try to delete our destinations first.
+    
+    try: shutil.rmtree(pyhole_out)
+    except: pass
+    
+    try: shutil.rmtree(admin_out)
+    except: pass
+    
     # Copy folder contents to new folder.
-    # Destination folder cannot already exist - it will be created.
-    # TODO: Handle folder already existing.
     shutil.copytree(pyhole_in, pyhole_out)
     shutil.copytree(admin_in , admin_out )
     
