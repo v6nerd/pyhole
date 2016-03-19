@@ -577,7 +577,7 @@ def choose_dns_provider():
 # def choose_dns_provider():
 
 def install_configs():
-
+    pass
 #end def install_configs()
 
 ########################
