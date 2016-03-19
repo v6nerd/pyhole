@@ -444,8 +444,9 @@ def set_ipv4_static(interface : str, ipv4address):
     
     # Are we using dhcpcd?
     # Raspbian uses dhcpcd by default.  Debian doesn't.
+    pass
     
-# def set_ipv4_static(interface : str, ipv4address):
+#end def set_ipv4_static(interface : str, ipv4address):
 
 def choose_dns_custom_servers(quantity=2):
     """Allow the user to choose custom DNS servers."""
