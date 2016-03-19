@@ -32,8 +32,10 @@ import configparser
 # https://apt.alioth.debian.org/python-apt-doc/library/apt.cache.html
 # https://apt.alioth.debian.org/python-apt-doc/library/apt.package.html
 import apt
-# For IP addresses
+# For looking up interfaces and IP addresses.
 import netifaces
+# For validating user provided IPs.
+import ipaddress
 
 
 # If not root, rerun as root with sudo.
@@ -63,6 +65,22 @@ web_servers = [
     w('Manual'  , None      , 'Install pyhole and pyhole-admin files only.'),
 ]
 
+# Define the DNS servers named tuple
+
+dp = namedtuple('dns_provider',
+                          'name, servers'
+                          )
+                
+# Define choices of DNS servers.
+
+dns_providers = [
+    dp('Google' , [ '8.8.8.8'       , '8.8.4.4'       ] ),
+    dp('OpenDNS', [ '208.67.222.222', '208.67.220.220'] ),
+    dp('Level3' , [ '4.2.2.1'       , '4.2.2.2'       ] ),
+    dp('Norton' , [ '199.85.126.10' , '199.85.127.10' ] ),
+    dp('Comodo' , [ '8.26.56.26'    , '8.20.247.20'   ] )
+]
+
 ########################
 ###   Configuration  ###
 ########################
@@ -75,7 +93,7 @@ d.set_background_title("pyhole-config")
 apt_cache = apt.Cache()
 
 ########################
-###     Functions    ###
+##  Helper Functions  ##
 ########################
 
 def cancel_pressed():
@@ -84,11 +102,25 @@ def cancel_pressed():
     sys.exit()
 #end def cancel_pressed():
 
-def welcome_message():
-    """Display any welcome messages."""
-    message = "This program will configure your pyhole."
-    d.msgbox(message)
-#end def welcome_message:
+def valid_ip(ip):
+    """Return True if an IP is valid, false otherwise."""
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except:
+        return False
+    #end except
+#end def valid_ip(ip):
+
+def valid_port(port):
+    """Return True if a port is valid, false otherwise."""
+    try:
+        port_int = int(port)
+        return port_int in range(1,65536)
+    except:
+        return False
+    #end except:
+#end def valid_port(port):
 
 def package_is_installed(package : str):
     """Return whether a package is installed."""
@@ -120,6 +152,16 @@ def package_install(package : str):
     apt_cache.open()
     
 #end def package_install(package : str):
+
+########################
+###  Main Functions  ###
+########################
+
+def show_welcome_message():
+    """Display any welcome messages."""
+    message = "This program will configure your pyhole."
+    d.msgbox(message)
+#end def show_welcome_message:
 
 def choose_web_server():
     """Allow the user to choose the web server they want."""
@@ -198,9 +240,13 @@ def choose_interface():
     
     message = "Please select a network interface.\n\nIf you are unsure, eth0 is almost always the best choice if you are using a wired connection."
     
-    button, answer = d.radiolist(message, choices=choices)
+    answer = None
     
-    if button == d.CANCEL: cancel_pressed()
+    while not answer:
+        button, answer = d.radiolist(message, choices=choices)
+        
+        if button == d.CANCEL: cancel_pressed()
+    #end while not answer:
     
     return answer
     
@@ -214,11 +260,15 @@ def choose_ipv4_ipv6():
         ('IPv6', "", False)
     ]
     
-    message = 'Please select protocols.\n\nIf you are unsure, leave these as they are.'
+    message = 'Please select at least one protocol.\n\nIf you are unsure, leave these as they are.'
     
-    button, answer = d.checklist(text = message, choices=choices)
+    answer = None
     
-    if button == d.CANCEL: cancel_pressed()
+    while not answer:
+        button, answer = d.checklist(text = message, choices=choices)
+        
+        if button == d.CANCEL: cancel_pressed()
+    #end while not answer:
     
     return answer
     
@@ -243,9 +293,11 @@ def choose_ipv4_address(interface: str):
     
     message = "Please select an IPv4 address on interface {0}.\n\nIf you are unsure, choose the first one.".format(interface)
     
-    button, answer = d.radiolist(text = message, choices=choices)
-    
-    if button == d.CANCEL: cancel_pressed()
+    answer = None
+    while not answer:
+        button, answer = d.radiolist(text = message, choices=choices)
+        if button == d.CANCEL: cancel_pressed()
+    #end while not answer:
     
     # Get the object represented by the chosen list item.
     return addrs[int(answer)]
@@ -273,9 +325,11 @@ def choose_ipv6_address(interface: str):
     
     message += "If you wish to use IPv6, we assume you know what you are doing - this should be a static address.  We won't perform any further checks or offer to reconfigure it for you."
     
-    button, answer = d.radiolist(text = message, choices=choices)
-    
-    if button == d.CANCEL: cancel_pressed()
+    answer = None
+    while not answer:
+        button, answer = d.radiolist(text = message, choices=choices)
+        if button == d.CANCEL: cancel_pressed()
+    #end while not answer:
     
     # Get the object represented by the chosen list item.
     return addrs[int(answer)]
@@ -310,9 +364,9 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
     message = ""
     
     if ipv4_address_type == 'static':
-        message += "It looks like your IPv4 address {0[addr]} on interface {1} is already static, which is good.\n\n".format(ipv4_address, interface)
+        message += "It looks like your IPv4 address {0[addr]} on interface {1} is already static, which is good.  (This may be incorrect though.)\n\n".format(ipv4_address, interface)
     elif ipv4_address_type == 'dynamic':
-        message += "It looks like your IPv4 address {0[addr]} on interface {1} is dynamic.  You need to have a static IP.\n\n".format(ipv4_address, interface)
+        message += "It looks like your IPv4 address {0[addr]} on interface {1} is dynamic.  (This may be incorrect though.)  You need to have a static IP.\n\n".format(ipv4_address, interface)
     else:
         message += "We're unable to tell whether your address {0[addr]} on interface {1} is dynamic or static.\n\n".format(ipv4_address, interface)
     #end else:
@@ -339,7 +393,7 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
 #end def choose_ipv4_reconfigure(interface : str, ipv4_address):
 
 def choose_ipv4_new_static(interface: str, ipv4_address):
-    
+    """Allow the user to choose their desired static IPv4 settings."""
     gateway = netifaces.gateways()['default'][netifaces.AF_INET]
     
     elements = [
@@ -360,12 +414,147 @@ def choose_ipv4_new_static(interface: str, ipv4_address):
     
 #end def choose_ipv4_new_static(interface: str, ipv4_address):
 
+def set_ipv4_static(interface : str, ipv4address):
+    
+    # Are we using dhcpcd?
+    # Raspbian uses dhcpcd by default.  Debian doesn't.
+    
+# def set_ipv4_static(interface : str, ipv4address):
+
+def choose_dns_custom_servers(quantity=2):
+    """Allow the user to choose custom DNS servers."""
+    elements = []
+    
+    for x in range( 0 , quantity ):
+        # Rows are 2, 4, 6, 8, etc. to allow some nice spacing.
+        row = 2*(x+1)
+        row1_col1_msg = "Server {0} IP Address".format(x+1)
+        
+        elements.append( ( row1_col1_msg , row, 2  , "" , row , 25 , 20 , 20 ) )
+        elements.append( ( "Port"        , row, 48 , "" , row , 54 , 7  , 5  ) )
+    #end for x in range( 0 , quantity ):
+    
+    base_message = "Enter the details of your DNS provider.  You can enter up to {0} servers on this screen.\n\n".format(quantity)
+    
+    base_message += "Port is optional and should only be specified if the provider of your DNS server explicitly says to use it.  If you are unsure then leave the Port fields blank."
+    
+    # Form height is 2*number of rows + 1 to allow nice spacing.
+    form_height = 2*quantity + 1
+    
+    message = base_message
+    
+    servers_validated = False
+    
+    while servers_validated == False:
+        button, answer = d.form(message, elements = elements, form_height = form_height)
+        
+        if button == d.CANCEL: cancel_pressed()
+        
+        servers = []
+        servers_validated = True
+        error_message = ""
+        
+        for x in range( 0 , quantity ):
+            # Generate our dns_provider object from the answers
+            # answer[2*x] is the IP address and answer[2*x+1] is the port.
+            # e.g.
+            #   x=0     IP: answer[0]   Port: answer[1]
+            #   x=1     IP: answer[2]   Port: answer[3]
+            #   x=2     IP: answer[4]   Port: answer[5]
+            #   etc.
+            # If the custom port is specified, add it after a # after the IP.
+            # This is dnsmasq.conf syntax.
+            
+            ip   = answer[2*x]
+            port = answer[2*x+1]
+            
+            
+            # If a server was entered...
+            if ip:
+                
+                # Check if the IP is valid.
+                if not valid_ip(ip): 
+                    # If not, set servers_validated to false so we return back to the menu.
+                    servers_validated = False
+                    error_message += "Server {0} IP address is not valid: {1}\n".format( x+1, ip )
+                #end if not valid_ip(ip):
+                
+                if port:
+                    # Similarly, check if the port is valid.
+                    if not valid_port(port): 
+                        servers_validated = False
+                        error_message += "Server {0} port is not valid: {1}\n".format( x+1, port )
+                    #end if not valid_ip(ip):
+                    server = "{0}#{1}".format(ip, port)
+                else:
+                    server = ip
+                #end else:
+                
+                # Add it to our list.
+                servers.append(server)
+            #end if answer[2*x]:
+        #end for x in range( 0 , quantity ):
+        
+        # We must have at least one server!
+        if len(servers) == 0:
+            servers_validated = False
+            error_message += "You must enter at least one server.\n"
+        #end if len(servers) == 0:
+        
+        # The message we will display on next run of the menu.
+        message = error_message + "\n" + base_message
+        
+        if servers_validated: dns_provider = dp("Custom", servers )
+        
+    #end while servers_validated = False:
+    
+    return dns_provider
+    
+#end def choose_dns_custom_servers(quantity=2):
+
+def choose_dns_provider():
+    """Allow the user to choose their DNS provider, or specify their own."""
+    
+    choices = []
+    for dns in dns_providers:
+        choice = ( dns.name, "" )
+        choices.append(choice)
+    #end for dns in dns_providers:
+    
+    custom = ( "Custom", "Set your own DNS servers." )
+    choices.append(custom)
+    
+    message = "pyhole needs to use an upstream DNS provider to resolve normal (non-ad) domain names.  Please choose a DNS provider.\n\nIf you are unsure, choose Google DNS."
+    
+    button, answer = d.menu(message, choices=choices)
+    
+    if button == d.CANCEL: cancel_pressed()
+    
+    if (answer == "Custom"):
+        # If they have chosen custom, move on to asking them for their custom server.
+        answer_provider = choose_dns_custom_servers(3)
+    else:
+        # If they have chosen a specific provider, look up the dns_provider object from their answer.
+        for dns in dns_providers:
+            if dns.name == answer:
+                answer_provider = dns
+                break
+            else:
+                answer_provider = None
+            #end else:
+        #end for dns in dns_providers:
+    #end else:
+    
+    return answer_provider
+    
+# def choose_dns_provider():
+
 ########################
 ###       Begin      ###
 ########################
 
 # Welcome!
-welcome_message()
+show_welcome_message()
 
 ########################
 ### Web Server
@@ -377,11 +566,13 @@ pyhole_web_root, pyhole_admin_web_root = choose_web_roots()
 ########################
 ### IP addresses
 
-ip_message = """As pyhole will be running a DNS server, it is essential that your internal IP address is static.  A dynamic IP is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)
+ip_message = """As pyhole will be running a DNS server, it is essential that your internal IP address is static.  A dynamic internal IP is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)
 
 pyhole can set a static IP address for you, though if you know how to set one yourself within Linux it is recommended you configure this outside of pyhole.
 
 Furthermore, if you are already running another web server, it is strongly recommended to configure a SECOND static IP address for pyhole.  This is outside the scope of pyhole-config.
+
+(Note that your external IP does not matter - it can be static, dynamic, whatever.)
 """
 
 d.msgbox(ip_message)
@@ -397,6 +588,7 @@ if 'IPv4' in protocols:
     
     if ipv4_reconfigure == "Configure":
         addr, netmask, gateway = choose_ipv4_new_static(interface, ipv4_address)
+        # IPv4 address configuration goes here
     #end if ipv4_reconfigure == "Configure":
 #end if 'IPv4' in protocols:
 
@@ -404,3 +596,8 @@ if 'IPv6' in protocols:
     ipv6_address = choose_ipv6_address(interface)
 #end if 'IPv6' in protocols:
 
+########################
+### DNS Servers
+
+# Choose upstream DNS servers
+dns_provider = choose_dns_provider()
