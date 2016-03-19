@@ -154,7 +154,7 @@ def package_install(package : str):
 #end def package_install(package : str):
 
 ########################
-###  Main Functions  ###
+##  Gather Functions  ##
 ########################
 
 def show_welcome_message():
@@ -225,6 +225,41 @@ def choose_web_roots():
     return answer
     
 #end def chooce_web_roots():
+
+def choose_webserver_password():
+    """Allow the user to choose a password for the web interface"""
+    
+    base_message1 = """When accessing the Pi-hole admin interface, you will need to log on with the username 'pyhole' and a password of your choosing.  \n\nPlease enter a password to secure your pyhole web interface."""
+    
+    message1 = base_message1
+    
+    message2 = """Please re-enter your password to confirm"""
+    
+    password_validated = False
+    
+    while password_validated == False:
+        button, answer1 = d.passwordbox(message1)
+        if button == d.CANCEL: cancel_pressed()
+        
+        button, answer2 = d.passwordbox(message2)
+        if button == d.CANCEL: cancel_pressed()
+        
+        error_message1 = ""
+        
+        if answer1 != answer2:
+            error_message1 = """Passwords did not match.\n"""
+        elif answer1 == "":
+            error_message1 = """You cannot have an empty password.\n\nWe're not performing any other password validation here - make it something simple if you want, just not blank!\n"""
+        else:
+            password_validated = True
+        #end else
+        
+        message1 = error_message1 + "\n" + base_message1
+        
+    #end while password_validated == False:
+    
+    return answer1
+#end def choose_webserver_password():
 
 def choose_interface():
     """Allow the user to choose their network interface."""
@@ -576,6 +611,10 @@ def choose_dns_provider():
     
 # def choose_dns_provider():
 
+########################
+##  Config Functions  ##
+########################
+
 def install_dnsmasq_config(dns_provider, interface : str):
     """Reads the template dnsmasq conf file, makes replacements, and outputs to the final location."""
     
@@ -620,6 +659,17 @@ show_welcome_message()
 # Choose a web server and web root paths.
 web_server = choose_web_server()
 pyhole_web_root, pyhole_admin_web_root = choose_web_roots()
+
+if web_server == 'Manual':
+    password_message = """The pyhole admin interface needs to be protected from unauthorised access.  You have chosen for Pi-Hole to install to a manually configured web server, so please make sure to configure authentication, for example with a username and password."""
+    
+    d.msgbox(password_message)
+    
+    web_password_set = False
+else:
+    web_password = choose_webserver_password()
+    web_password_set = True
+#end else:
 
 ########################
 ### IP addresses
@@ -668,3 +718,4 @@ dns_provider = choose_dns_provider()
 # Start configuring!
 
 install_dnsmasq_config(dns_provider, interface)
+
