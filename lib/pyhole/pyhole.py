@@ -62,12 +62,13 @@ def valid_port(port):
 ###     Conf file    ###
 ########################
 
-config = configparser.ConfigParser()
-
 def read_config():
     """Read the pyhole config from file."""
     global config
     global conf_file_path
+    
+    # Reinitialise the config object.
+    config = configparser.ConfigParser()
     
     # Note: Reading the config does not seem to fail if it does not exist.
     config.read(conf_file_path)
