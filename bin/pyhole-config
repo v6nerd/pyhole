@@ -130,6 +130,24 @@ def package_install(package : str):
     
 #end def package_install(package : str):
 
+def copy_and_replace(src, dst, replacements):
+    
+    # Replacements must be a dict like, for example:
+    # replacements = {
+        # '@DNSSERVERS@' : DNSSERVERS,
+        # '@INT@'        : interface
+    # }
+    
+    with open(src) as infile, open (dst, 'w') as outfile:
+        for line in infile:
+            for src, target in replacements.items():
+                line = line.replace(src, target)
+            #end for src, target in replacements.items():
+            outfile.write(line)
+        #end for line in infile:
+    #end with
+#end def copy_and_replace(src, dst, replacements):
+
 ########################
 ##  Gather Functions  ##
 ########################
@@ -605,28 +623,54 @@ def install_dnsmasq_config(dns_provider, interface : str):
         DNSSERVERS += "server={0}\n".format(s)
     #end for s in dns_provider.servers:
     
+    # The strings we are replacing.
     replacements = {
         '@DNSSERVERS@' : DNSSERVERS,
         '@INT@'        : interface
     }
     
-    with open(dnsmasq_conf_in) as infile, open (dnsmasq_conf_out, 'w') as outfile:
-        for line in infile:
-            for src, target in replacements.items():
-                line = line.replace(src, target)
-            #end for src, target in replacements.items():
-            outfile.write(line)
-        #end for line in infile:
-    #end with
+    copy_and_replace(dnsmasq_conf_in, dnsmasq_conf_out, replacements)
     
 #end def install_dnsmasq_config(dns_provider, interface : str):
 
-def install_webserver_config(web_server):
+def create_htpasswd_file(password):
+    htpasswd_file  = os.path.join(pyhole.config_dir, 'htpasswd')
+    htpasswd_cmd = 'htpasswd -cb "{0}" pi-hole "{1}"'.format(htpasswd_file, password)
+    os.system( htpasswd_cmd )
+    
+    return htpasswd_file
+#end def create_htpasswd_file(password):
+
+def install_webserver_config(web_server, interface : str, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file):
+    
+    # The strings we are replacing.
+    replacements = {
+        '@IPv4addr@'        : ipv4_address['addr'],
+        '@INT@'             : interface,
+        '@web_root_pyhole@' : web_root_pyhole,
+        '@web_root_admin@'  : web_root_admin,
+        '@htpasswd_file@'   : htpasswd_file
+    }
     
     if web_server == "lighttpd":
-        pass
+        lighttpd_conf_in = os.path.join(pyhole.share_dir, 'conf/lighttpd/lighttpd.conf')
+        lighttpd_conf_out = '/etc/lighttpd/lighttpd.conf'
+        
+        # Backup the original file.
+        lighttpd_conf_out_bak = lighttpd_conf_out + ".orig"
+        shutil.move(lighttpd_conf_out, lighttpd_conf_out_bak)
+        
+        copy_and_replace(lighttpd_conf_in, lighttpd_conf_out, replacements)
     elif web_server == "apache":
-        pass
+        apache_pyhole_in = os.path.join(pyhole.share_dir, 'conf/apache/pyhole.conf')
+        apache_pyhole_out = '/etc/apache2/sites-available/pihole.conf'
+        
+        copy_and_replace(apache_pyhole_in, apache_pyhole_out, replacements)
+        
+        apache_admin_in = os.path.join(pyhole.share_dir, 'conf/apache/pyhole-admin.conf')
+        apache_admin_out = '/etc/apache2/sites-available/pihole-admin.conf'
+        
+        copy_and_replace(apache_admin_in, apache_admin_out, replacements)
     #end elif web_server == "apache":
     
 #end def install_webserver_config(web_server):
@@ -753,6 +797,9 @@ pyhole.write_config()
 
 install_dnsmasq_config(dns_provider, interface)
 install_sudoers_file()
+htpasswd_file = create_htpasswd_file(web_password)
+
+install_webserver_config(web_server, interface, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file)
 
 # Create pyhole user and set permissions.
 
