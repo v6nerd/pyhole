@@ -675,6 +675,20 @@ def install_webserver_config(web_server, interface : str, ipv4_address, web_root
     
 #end def install_webserver_config(web_server):
 
+def install_webserver(web_root_pyhole, web_root_admin):
+    pyhole_in  = os.path.join(pyhole.share_dir, 'www/pyhole/pyhole'     )
+    pyhole_out = os.path.join(web_root_pyhole , 'pyhole'                )
+    admin_in   = os.path.join(pyhole.share_dir, 'www/pyhole-admin/admin')
+    admin_out  = os.path.join(web_root_admin  , 'admin'                 )
+    
+    # Copy folder contents to new folder.
+    # Destination folder cannot already exist - it will be created.
+    # TODO: Handle folder already existing.
+    shutil.copytree(pyhole_in, pyhole_out)
+    shutil.copytree(admin_in , admin_out )
+    
+#end def install_webserver(web_root_pyhole, web_root_admin):
+
 def install_sudoers_file():
     sudoers_file_in  = os.path.join(pyhole.share_dir, 'conf/sudoers.d/pyhole')
     sudoers_file_out = '/etc/sudoers.d/pyhole'
@@ -800,6 +814,7 @@ install_sudoers_file()
 htpasswd_file = create_htpasswd_file(web_password)
 
 install_webserver_config(web_server, interface, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file)
+install_webserver(web_root_pyhole, web_root_admin)
 
 # Create pyhole user and set permissions.
 
