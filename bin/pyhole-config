@@ -397,18 +397,44 @@ def choose_ipv4_new_static(interface: str, ipv4_address):
     gateway = netifaces.gateways()['default'][netifaces.AF_INET]
     
     elements = [
-        ("address", 2, 2, ipv4_address['addr']   , 2, 20, 25, 25),
-        ("netmask", 4, 2, ipv4_address['netmask'], 4, 20, 25, 25),
-        ("gateway", 6, 2, gateway[0]             , 6, 20, 25, 25)
+        ("address", 2, 2, ipv4_address['addr']   , 2, 15, 25, 25),
+        ("netmask", 4, 2, ipv4_address['netmask'], 4, 15, 25, 25),
+        ("gateway", 6, 2, gateway[0]             , 6, 15, 25, 25)
     ]
     
-    message = "Please enter your desired static IPv4 settings.\n\n"
+    base_message = "Please enter your desired static IPv4 settings.\n\n"
     
-    message += "If you are unsure, you can leave them as is.  It is possible your router could still try to assign this IPv4 address to a device, which would cause a conflict, but in most cases the router is smart enough to not do that and the device is smart enough not to accept the IP.  If you are worried, set the address to one outside your DHCP pool and/or make a DHCP reservation for the IPv4 address you set here."
+    base_message += "If you are unsure, you can leave them as is.  It is possible your router could still try to assign this IPv4 address to a device, which would cause a conflict, but in most cases the router is smart enough to not do that and the device is smart enough not to accept the IP.  If you are worried, set the address to one outside your DHCP pool and/or make a DHCP reservation for the IPv4 address you set here."
     
-    button, answer = d.form(message, elements = elements, form_height = 7)
+    message = base_message
+    validated = False
     
-    if button == d.CANCEL: cancel_pressed()
+    
+    while validated == False:
+        button, answer = d.form(message, elements = elements, form_height = 7)
+        if button == d.CANCEL: cancel_pressed()
+        
+        error_message = ""
+        
+        validated = True
+        if not valid_ip(answer[0]):
+            validated = False
+            error_message += "Address is not valid: {0}\n".format(answer[0])
+        #end if not valid_ip(answer[0]):
+        
+        if not valid_ip(answer[1]):
+            validated = False
+            error_message += "Netmask is not valid: {0}\n".format(answer[1])
+        #end if not valid_ip(answer[1]):
+        
+        if not valid_ip(answer[2]):
+            validated = False
+            error_message += "Gateway is not valid: {0}\n".format(answer[2])
+        #end if not valid_ip(answer[2]):
+        
+        message = error_message + "\n" + base_message
+        
+    #end while validated == False:
     
     return answer
     
