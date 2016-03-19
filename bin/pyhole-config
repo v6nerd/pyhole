@@ -198,7 +198,7 @@ def choose_web_server():
     if len(web_servers_installed) == 0:
         web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel pyhole-config and install one of the supported web servers above.  Otherwise you may proceed with manual configuration.\n\nIf you are unsure, cancel this config and run the following before continuing:\n\nsudo apt-get install lighttpd"
     else:
-        web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option.\n\nIf you are unsure, choose {0}.".format(choices[0])
+        web_server_message = "Web servers supported for automatic configuration that are already installed web servers appear below.  Please choose an option.\n\nIf you are unsure, choose {0}.".format(choices[0][0])
     #end else:
     
     button, answer = d.menu(web_server_message, choices=choices)
@@ -576,9 +576,34 @@ def choose_dns_provider():
     
 # def choose_dns_provider():
 
-def install_configs():
-    pass
-#end def install_configs()
+def install_dnsmasq_config(dns_provider, interface : str):
+    """Reads the template dnsmasq conf file, makes replacements, and outputs to the final location."""
+    
+    dnsmasq_conf_in  = os.path.join(share_dir, 'conf/dnsmasq/01-pyhole.conf')
+    dnsmasq_conf_out = '/etc/dnsmasq.d/01-pyhole.conf'
+    
+    # Generate all "server = x.x.x.x" lines
+    DNSSERVERS = ""
+    
+    for s in dns_provider.servers:
+        DNSSERVERS += "server={0}\n".format(s)
+    #end for s in dns_provider.servers:
+    
+    replacements = {
+        '@DNSSERVERS@' : DNSSERVERS,
+        '@INT@'        : interface
+    }
+    
+    with open(dnsmasq_conf_in) as infile, open (dnsmasq_conf_out, 'w') as outfile:
+        for line in infile:
+            for src, target in replacements.items():
+                line = line.replace(src, target)
+            #end for src, target in replacements.items():
+            outfile.write(line)
+        #end for line in infile:
+    #end with
+    
+#end def install_dnsmasq_config(dns_provider, interface : str):
 
 ########################
 ###   Gather Info    ###
@@ -641,3 +666,5 @@ dns_provider = choose_dns_provider()
 ########################
 
 # Start configuring!
+
+install_dnsmasq_config(dns_provider, interface)
