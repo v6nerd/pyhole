@@ -34,8 +34,8 @@ import configparser
 import apt
 # For looking up interfaces and IP addresses.
 import netifaces
-# For validating user provided IPs.
-import ipaddress
+# Our very own module!
+from pyhole import pyhole
 
 
 # If not root, rerun as root with sudo.
@@ -47,11 +47,6 @@ if os.geteuid() != 0:
 ########################
 ###     Variables    ###
 ########################
-
-# These should already exist if installed by the .deb package.
-config_dir = '/etc/pyhole'
-share_dir  = '/usr/share/pyhole'
-var_dir    = '/var/lib/pyhole'
 
 # Define the web server named tuple
 w = namedtuple('webserver',
@@ -101,26 +96,6 @@ def cancel_pressed():
     print("Cancel button pressed.  Exiting...")
     sys.exit()
 #end def cancel_pressed():
-
-def valid_ip(ip):
-    """Return True if an IP is valid, false otherwise."""
-    try:
-        ipaddress.ip_address(ip)
-        return True
-    except:
-        return False
-    #end except
-#end def valid_ip(ip):
-
-def valid_port(port):
-    """Return True if a port is valid, false otherwise."""
-    try:
-        port_int = int(port)
-        return port_int in range(1,65536)
-    except:
-        return False
-    #end except:
-#end def valid_port(port):
 
 def package_is_installed(package : str):
     """Return whether a package is installed."""
@@ -452,20 +427,20 @@ def choose_ipv4_new_static(interface: str, ipv4_address):
         error_message = ""
         
         validated = True
-        if not valid_ip(answer[0]):
+        if not pyhole.valid_ip(answer[0]):
             validated = False
             error_message += "Address is not valid: {0}\n".format(answer[0])
-        #end if not valid_ip(answer[0]):
+        #end if not pyhole.valid_ip(answer[0]):
         
-        if not valid_ip(answer[1]):
+        if not pyhole.valid_ip(answer[1]):
             validated = False
             error_message += "Netmask is not valid: {0}\n".format(answer[1])
-        #end if not valid_ip(answer[1]):
+        #end if not pyhole.valid_ip(answer[1]):
         
-        if not valid_ip(answer[2]):
+        if not pyhole.valid_ip(answer[2]):
             validated = False
             error_message += "Gateway is not valid: {0}\n".format(answer[2])
-        #end if not valid_ip(answer[2]):
+        #end if not pyhole.valid_ip(answer[2]):
         
         message = error_message + "\n" + base_message
         
@@ -535,18 +510,18 @@ def choose_dns_custom_servers(quantity=2):
             if ip:
                 
                 # Check if the IP is valid.
-                if not valid_ip(ip): 
+                if not pyhole.valid_ip(ip): 
                     # If not, set servers_validated to false so we return back to the menu.
                     servers_validated = False
                     error_message += "Server {0} IP address is not valid: {1}\n".format( x+1, ip )
-                #end if not valid_ip(ip):
+                #end if not pyhole.valid_ip(ip):
                 
                 if port:
                     # Similarly, check if the port is valid.
-                    if not valid_port(port): 
+                    if not pyhole.valid_port(port): 
                         servers_validated = False
                         error_message += "Server {0} port is not valid: {1}\n".format( x+1, port )
-                    #end if not valid_ip(ip):
+                    #end if not pyhole.valid_port(port):
                     server = "{0}#{1}".format(ip, port)
                 else:
                     server = ip
@@ -618,7 +593,7 @@ def choose_dns_provider():
 def install_dnsmasq_config(dns_provider, interface : str):
     """Reads the template dnsmasq conf file, makes replacements, and outputs to the final location."""
     
-    dnsmasq_conf_in  = os.path.join(share_dir, 'conf/dnsmasq/01-pyhole.conf')
+    dnsmasq_conf_in  = os.path.join(pyhole.share_dir, 'conf/dnsmasq/01-pyhole.conf')
     dnsmasq_conf_out = '/etc/dnsmasq.d/01-pyhole.conf'
     
     # Generate all "server = x.x.x.x" lines

@@ -16,26 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# # For running system commands
-# import os
-# # For getting the command line arguments we were run with.
-# import sys
-# # For named tuples
-# from collections import namedtuple
-# # For ncurses dialogs
-# # http://pythondialog.sourceforge.net/doc/Dialog_class_overview.html
-# # http://pythondialog.sourceforge.net/doc/widgets.html
-# from dialog import Dialog
-# # For parsing the config file
-# import configparser
-# # For managing apt packages
-# # https://apt.alioth.debian.org/python-apt-doc/library/apt.cache.html
-# # https://apt.alioth.debian.org/python-apt-doc/library/apt.package.html
-# import apt
-# # For looking up interfaces and IP addresses.
-# import netifaces
-# # For validating user provided IPs.
-# import ipaddress
+# For validating user provided IPs.
+import ipaddress
 
 ########################
 ###     Variables    ###
