@@ -16,8 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# For running system commands
+import os
 # For validating user provided IPs.
 import ipaddress
+# For managing our conf file
+import configparser
 
 ########################
 ###     Variables    ###
@@ -28,9 +32,7 @@ config_dir = '/etc/pyhole'
 share_dir  = '/usr/share/pyhole'
 var_dir    = '/var/lib/pyhole'
 
-########################
-###   Configuration  ###
-########################
+conf_file_path = os.path.join(config_dir, 'pyhole.conf')
 
 ########################
 ##  Helper Functions  ##
@@ -56,6 +58,22 @@ def valid_port(port):
     #end except:
 #end def valid_port(port):
 
+########################
+###     Conf file    ###
+########################
 
+config = configparser.ConfigParser()
 
+# Read the config.  This doesn't seem to error if the file doesn't exist.
+config.read(conf_file_path)
+
+def write_config():
+    global config
+    global conf_file_path
+    
+    with open(conf_file_path, 'w') as conf_file:
+        config.write(conf_file)
+    #end with
+    
+#end def write_config:
 
