@@ -629,6 +629,16 @@ def install_dnsmasq_config(dns_provider, interface : str):
     
 #end def install_dnsmasq_config(dns_provider, interface : str):
 
+def create_pyhole_log_file():
+    pyhole_log_file = '/var/log/pyhole.log'
+    
+    # Create an empty file
+    open(pyhole_log_file, 'a').close()
+    # Set owner to dnsmasq and group owner to pyhole, the former with write access.
+    shutil.chown(pyhole_log_file, user = 'dnsmasq', group = 'pyhole')
+    os.chmod(pyhole_log_file, mode = 0o644 )
+#end def create_dnsmasqd_log_file():
+
 def create_htpasswd_file(password):
     htpasswd_file  = os.path.join(pyhole.config_dir, 'htpasswd')
     htpasswd_cmd = 'htpasswd -cb "{0}" pi-hole "{1}"'.format(htpasswd_file, password)
@@ -809,6 +819,7 @@ if use_ipv6:
 # Choose upstream DNS servers
 dns_provider = choose_dns_provider()
 
+# Above this line, no changes have been made to the system.
 
 ########################
 ###     Configure    ###
@@ -831,18 +842,19 @@ pyhole.config['WebServer']['web_root_admin']    = web_root_admin
 
 pyhole.write_config()
 
+# Create pyhole user and set permissions.
+
+create_pyhole_user()
+set_dir_permissions()
+
 # Write / copy config.
 
 install_dnsmasq_config(dns_provider, interface)
+create_pyhole_log_file()
 install_sudoers_file()
 install_cron_file()
 htpasswd_file = create_htpasswd_file(web_password)
 
 install_webserver_config(web_server, interface, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file)
 install_webserver(web_root_pyhole, web_root_admin)
-
-# Create pyhole user and set permissions.
-
-create_pyhole_user()
-set_dir_permissions()
 
