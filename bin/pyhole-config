@@ -40,7 +40,7 @@ import shutil
 from pyhole import pyhole
 
 # If not root, rerun as root with sudo.
-sudo_root()
+pyhole.sudo_root()
 
 ########################
 ###     Variables    ###
