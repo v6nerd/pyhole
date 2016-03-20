@@ -20,11 +20,15 @@
 from pyhole import pyhole
 # For checking files exist
 import os
+# For copying files
+import shutil
 # For getting our exception text
 import sys
 # For downloading files.
 import urllib.parse
 import urllib.request
+# For temporary files
+import tempfile
 
 # Rerun as the pyhole user.
 pyhole.sudo_pyhole()
@@ -82,8 +86,13 @@ def gravity_collapse(adlists_file):
 #   so we save a lot of stuff in files rather than in memory
 #   so that we're not wasting RAM.
 
-def gravity_download_source(url : str, filename : str, headers = {}, post_values = {} ):
+def gravity_download_source(url : str, destination_filename : str, headers = {}, post_values = {} ):
     """Download the source to a file, using any headers or POST data required."""
+    
+    # We will first save to a temp file, so that if our result is an empty file
+    # then we won't overwrite an old nonempty file.  So let's initialise one.
+    # This type won't be automatically deleted upon close.
+    temp_file = tempfile.mkstemp()[1]
     
     # PROTIP: Below, Replace post_values with True to get
     # an HTTP error with some providers.  Useful for testing
@@ -94,11 +103,23 @@ def gravity_download_source(url : str, filename : str, headers = {}, post_values
         data = None
     #end else:
     req = urllib.request.Request(url, data, headers)
-    with urllib.request.urlopen(req, timeout = 20) as response, open (filename, 'wb') as f:
+    with urllib.request.urlopen(req, timeout = 20) as response, open (temp_file, 'wb') as f:
         f.write( response.read() )
     #end with
     
-#end def gravity_download_source(url : str, filename : str, headers = {}, post_values = {} ):
+    if os.path.getsize(temp_file) == 0:
+        nonempty = False
+    else:
+        nonempty = True
+        shutil.copyfile(temp_file, destination_filename)
+    #end if
+    
+    # Delete the temporary file
+    os.remove(temp_file)
+    
+    return nonempty
+    
+#end def gravity_download_source(url : str, destination_filename : str, headers = {}, post_values = {} ):
 
 def gravity_spinup(sources : list):
     """Download each source to a file."""
@@ -114,6 +135,7 @@ def gravity_spinup(sources : list):
         basename = "list.{0}.{1}.domains".format( i, domain )
         filename = os.path.join( pyhole.var_dir, basename )
         
+        # Our default headers and post values...
         headers = {
                         'User-Agent' : 'Mozilla/10.0'
                   }
@@ -132,17 +154,50 @@ def gravity_spinup(sources : list):
         #end elif
         
         print("::: Getting {0} list...".format(domain) , end='')
+        
+        tryold = False
+        success = False
+        
         try:
-            gravity_download_source( s, filename, headers, post_values)
-            print("successful!")
+            nonempty = gravity_download_source( s, filename, headers, post_values)
         except urllib.error.HTTPError as inst:
-            print("encountered error {0} {1}.".format(inst.code, inst.reason) )
+            print("encountered error {0} {1}.  ".format(inst.code, inst.reason), end='' )
+            tryold = True
         except:
-            print("encountered an unknown error:", sys.exc_info()[0] )
+            print("encountered an unknown error: {0}.  ".format(sys.exc_info()[0]), end='' )
+            tryold = True
         else:
+            if nonempty == False:
+                print("downloaded an empty file.  ", end='')
+                tryold = True
+            else:
+                print("successful!")
+                success = True
+            #end else
+        #end else
+        
+        if tryold == True:
+            # But do we already have an older version of this file?
+            nonempty_oldfile = False
+            try:
+                nonempty_oldfile = (os.path.getsize(filename) >= 0)
+            except:
+                pass
+            #end except
+            
+            if nonempty_oldfile:
+                print("Using previous download.")
+                success = True
+            else:
+                print("No previous download.")
+            #end else
+            
+        #end if
+        
+        if success == True:
             # Add to sources_out a 2-tuple of the source and filename.
             sources_out.append( ( s, filename ) )
-        #end else
+        #end if
         
         i = i + 1
     #end for s in sources:
