@@ -640,6 +640,8 @@ def create_pyhole_log_file():
     
     # Note that when logrotate is run, pyhole.logrotate specifies to create the new file
     # with the above mode and owner.
+    # So if the above needs to be changed, so will pyhole.logrotate.
+    
 #end def create_dnsmasqd_log_file():
 
 def create_htpasswd_file(password):
