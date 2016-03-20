@@ -22,6 +22,8 @@ from pyhole import pyhole
 import os
 # For copying files
 import shutil
+# For wildcard file / directory searches.
+import glob
 # For getting our exception text
 import sys
 # For downloading files.
@@ -44,7 +46,7 @@ p_matterandlight = base_path + ".0.matterandlight"  # Unused - gravity_schwarzch
 p_supernova      = base_path + ".1.supernova"       # After gravity_advanced 
 p_eventhorizon   = base_path + ".2.eventhorizon"    # After gravity_unique
 p_accretiondisc  = base_path + ".3.accretiondisc"   # After gravity_hostformat
-p_eyeoftheneedle = base_path + ".4.eyeoftheneedle"  # 
+p_eyeoftheneedle = base_path + ".4.eyeoftheneedle"  # Unused - just like original gravity.sh
 
 # Read our IP details from our config file.
 ipv4_addr = None
@@ -280,6 +282,17 @@ def gravity_hostformat( source_filename, destination_filename, ipv4_addr = None,
     #end with
 #end def gravity_hostformat( source_filename, destination_filename ):
 
+def gravity_blackbody( dir, source_files ):
+    """Delete all list.*.*.domains files are not in our source_files list."""
+    glob_string = os.path.join(dir, 'list.*.*.domains')
+    files = glob.glob(glob_string)
+    for f in files:
+        if not f in source_files:
+            os.remove(f)
+        #end if
+    #end for
+#end def gravity_blackbody( dir, source_files )
+
 ########################
 ###       Begin      ###
 ########################
@@ -296,9 +309,19 @@ sources = gravity_collapse(adlists_file)
 
 # Download our sources.  sources_out is a list of 2-tuples with URLs and filenames.
 sources_downloaded = gravity_spinup(sources)
-
+# Split the tuple just into a list of filenames
 source_files = [ x[1] for x in sources_downloaded ]
 
-gravity_schwarzchild(source_files, p_supernova)
+# Read all of the source files, remove all comments,
+# and for now just keep the domain names.
+gravity_advanced(source_files, p_supernova)
+# Sort and remove duplicates
 gravity_unique(p_supernova, p_eventhorizon)
+# Re-add the IPs to make a hosts file.
 gravity_hostformat(p_eventhorizon, p_accretiondisc, ipv4_addr, ipv6_addr)
+
+# Copy this file to the final location.
+shutil.copyfile(p_accretiondisc, pyhole.hosts_file)
+
+# Remove any list.*.*.domains files that we aren't aware of.
+gravity_blackbody(pyhole.var_dir, source_files)

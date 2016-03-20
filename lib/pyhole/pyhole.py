@@ -44,6 +44,8 @@ adlists_file    = os.path.join(config_dir, 'adlists.list')
 whitelist_file  = os.path.join(config_dir, 'whitelist.txt')
 blacklist_file  = os.path.join(config_dir, 'blacklist.txt')
 
+hosts_file      = os.path.join(var_dir   , 'gravity.list' )
+
 ########################
 ##  Helper Functions  ##
 ########################
