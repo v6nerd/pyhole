@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Our very own module!
+from pyhole import pyhole
 # For running system commands and setting permissions.
 import os
 # For exitting.
@@ -36,8 +38,6 @@ import apt
 import netifaces
 # For file operations including ownership
 import shutil
-# Our very own module!
-from pyhole import pyhole
 
 # If not root, rerun as root with sudo.
 pyhole.sudo_root()

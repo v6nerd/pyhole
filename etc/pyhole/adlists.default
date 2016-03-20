@@ -1,8 +1,8 @@
 ## Pi-hole ad-list default sources. Updated 21/02/2016 #########################
 #                                                                              #
 #  To make changes to this file:                                               #
-#    1. run `cp /etc/pihole/adlists.default /etc/pihole/adlists.list`           #
-#    2. run `nano /etc/pihole/adlists.list`                                    #
+#    1. run `cp /etc/pyhole/adlists.default /etc/pyhole/adlists.list`          #
+#    2. run `nano /etc/pyhole/adlists.list`                                    #
 #    3. Uncomment or comment any of the below lists                            #
 #                                                                              #
 #  Know of any other lists? Feel free to let us know about them, or add them   #

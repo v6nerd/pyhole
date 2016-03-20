@@ -18,6 +18,89 @@
 
 # Our very own module!
 from pyhole import pyhole
+# For checking files exist
+import os
+# For downloading files.
+import urllib.parse
+import urllib.request
 
 pyhole.sudo_pyhole()
+
+def gravity_collapse(adlists_file):
+    """Determine our adlist sources, and output as a list."""
+    with open(adlists_file, 'rt') as f:
+        # We need all lines that are not blank and are not comments.
+        
+        # Get all lines with trailing whitespace stripped.
+        lines = (line.rstrip() for line in f) 
+        # Get all lines that
+        #   (a) Are not blank, AND
+        #   (b) Do not begin with a hash (after any leading whitespace).
+        sources = list(
+                        line for line in lines if (line and not line.lstrip().startswith('#') )
+                      )
+        #sources = list(for line in lines if line and not line.lstrip().startswith('#'))
+    #end with open(adlist_file, 'rt') as f:
+    
+    return sources
+#end def gravity_collapse(adlists_file):
+
+def gravity_download_source(url : str, filename : str, headers = {}, post_values = {} ):
+    """Download the source to a file, using any headers or POST data required."""
+    
+    data = urllib.parse.urlencode(post_values)
+    data = data.encode('ascii')
+    req = urllib.request.Request(url, data, headers)
+    with urllib.request.urlopen(req) as response, open (filename, 'wb') as f:
+        f.write( response.read() )
+    #end with
+    
+#end def gravity_download_source(url : str, filename : str, headers = {}, post_values = {} ):
+
+def gravity_spinup(sources : list):
+    """"""
+    
+    i = 0
+    for s in sources:
+        
+        # Get just the domain name itself.
+        domain = urllib.parse.urlparse(s).netloc
+        
+        # Generate our save filename.
+        basename = "list.{0}.{1}.domains".format( i, domain )
+        filename = os.path.join( pyhole.var_dir, basename )
+        
+        headers = {
+                        'User-Agent' : 'Mozilla/10.0'
+                  }
+        post_values = {}
+        # Handle our special cases
+        if "adblock.mahakala.is" in s:
+            headers = {
+                            'User-Agent'    : 'Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0',
+                            'Referer'       : 'http://forum.xda-developers.com/'
+                      }
+        elif "pgl.yoyo.org" in s:
+            post_values = {
+                                'mimetype'      : 'plaintext',
+                                'hostformat'    : 'hosts'
+                          }
+        #end elif
+        
+        gravity_download_source( s, filename, headers, post_values)
+        
+        i = i + 1
+    #end for s in sources:
+#end def gravity_spinup(sources : list):
+
+########################
+###       Begin      ###
+########################
+
+# Find out if we're loading adlist.list or adlist.default
+if os.path.isfile(pyhole.adlists_file):
+    adlists_file = pyhole.adlists_file
+else:
+    adlists_file = pyhole.adlists_default
+#end else
 
