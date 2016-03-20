@@ -38,6 +38,9 @@ var_dir    = '/var/lib/pyhole'
 
 conf_file_path = os.path.join(config_dir, 'pyhole.conf')
 
+adlists_default = os.path.join(config_dir, 'adlists.default')
+adlists_file    = os.path.join(config_dir, 'adlists.list')
+
 ########################
 ##  Helper Functions  ##
 ########################
