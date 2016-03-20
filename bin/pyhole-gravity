@@ -309,7 +309,7 @@ def gravity_reload():
 ########################
 
 print(":::")
-print("::: Large gravitational pull detected at {0} {1}.".format(ipv4_addr, pyhole.config['Network'].get(interface) ) )
+print("::: Large gravitational pull detected at {0} {1}.".format(ipv4_addr, pyhole.config['Network'].get('interface') ) )
 print(":::")
 
 print("::: Neutrino emissions detected...")
