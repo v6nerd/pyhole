@@ -26,7 +26,12 @@ import sys
 import urllib.parse
 import urllib.request
 
+# Rerun as the pyhole user.
 pyhole.sudo_pyhole()
+
+########################
+###     Variables    ###
+########################
 
 # Variables for various stages of downloading and formatting the list
 # Trying to keep with the original Pi-Hole here...
@@ -34,8 +39,24 @@ base_path = os.path.join(pyhole.var_dir, 'pyhole')
 p_matterandlight = base_path + ".0.matterandlight"  # Unused - gravity_schwarzchild combined into gravity_advanced
 p_supernova      = base_path + ".1.supernova"       # After gravity_advanced 
 p_eventhorizon   = base_path + ".2.eventhorizon"    # After gravity_unique
-p_accretiondisc  = base_path + ".3.accretiondisc"   # 
+p_accretiondisc  = base_path + ".3.accretiondisc"   # After gravity_hostformat
 p_eyeoftheneedle = base_path + ".4.eyeoftheneedle"  # 
+
+# Read our IP details from our config file.
+ipv4_addr = None
+ipv6_addr = None
+
+if pyhole.config['Network'].get('use_ipv4') == 'True':
+    ipv4_addr = pyhole.config['Network']['ipv4_addr']
+#end if
+
+if pyhole.config['Network'].get('use_ipv6') == 'True':
+    ipv6_addr = pyhole.config['Network']['ipv6_addr']
+#end if
+
+########################
+###     Functions    ###
+########################
 
 def gravity_collapse(adlists_file):
     """Determine our adlist sources, and output as a list."""
@@ -175,6 +196,35 @@ def gravity_unique( source_filename, destination_filename ):
     
 #end def gravity_unique( infile, outfile ):
 
+def domain_hostformat(addr, domain):
+    return "{0} {1}".format(addr,domain)
+#end def add_hostname(str):
+
+def gravity_hostformat( source_filename, destination_filename, ipv4_addr = None, ipv6_addr = None ):
+    with open(source_filename, 'rt') as infile, open (destination_filename, 'wt') as outfile:
+        # Add a dummy record to the start
+        dummy = ""
+        if ipv4_addr:
+            dummy += domain_hostformat(ipv4_addr, "pyhole.isworking.ok")
+            dummy += "\n"
+        #end if
+        if ipv6_addr:
+            dummy += domain_hostformat(ipv6_addr, "pyhole.isworking.ok")
+            dummy += "\n"
+        #end if
+        outfile.write(dummy)
+        for line in infile:
+            # Note that we don't need /n here as it's already included.
+            if ipv4_addr:
+                outfile.write( domain_hostformat(ipv4_addr, line) )
+            #end if
+            if ipv6_addr:
+                outfile.write( domain_hostformat(ipv6_addr, line) )
+            #end if
+        #end for
+    #end with
+#end def gravity_hostformat( source_filename, destination_filename ):
+
 ########################
 ###       Begin      ###
 ########################
@@ -196,3 +246,4 @@ source_files = [ x[1] for x in sources_downloaded ]
 
 gravity_schwarzchild(source_files, p_supernova)
 gravity_unique(p_supernova, p_eventhorizon)
+gravity_hostformat(p_eventhorizon, p_accretiondisc, ipv4_addr, ipv6_addr)
