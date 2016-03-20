@@ -20,6 +20,8 @@
 from pyhole import pyhole
 # For checking files exist
 import os
+# For getting our exception text
+import sys
 # For downloading files.
 import urllib.parse
 import urllib.request
@@ -45,22 +47,34 @@ def gravity_collapse(adlists_file):
     return sources
 #end def gravity_collapse(adlists_file):
 
+# Note:
+#   We're going to be handling a large number of domains here,
+#   so we save a lot of stuff in files rather than in memory
+#   so that we're not wasting RAM.
+
 def gravity_download_source(url : str, filename : str, headers = {}, post_values = {} ):
     """Download the source to a file, using any headers or POST data required."""
     
-    data = urllib.parse.urlencode(post_values)
-    data = data.encode('ascii')
+    # PROTIP: Below, Replace post_values with True to get
+    # an HTTP error with some providers.  Useful for testing
+    if post_values:
+        data = urllib.parse.urlencode(post_values)
+        data = data.encode('ascii')
+    else:
+        data = None
+    #end else:
     req = urllib.request.Request(url, data, headers)
-    with urllib.request.urlopen(req) as response, open (filename, 'wb') as f:
+    with urllib.request.urlopen(req, timeout = 20) as response, open (filename, 'wb') as f:
         f.write( response.read() )
     #end with
     
 #end def gravity_download_source(url : str, filename : str, headers = {}, post_values = {} ):
 
 def gravity_spinup(sources : list):
-    """"""
+    """Download each source to a file."""
     
     i = 0
+    sources_out = []
     for s in sources:
         
         # Get just the domain name itself.
@@ -87,10 +101,23 @@ def gravity_spinup(sources : list):
                           }
         #end elif
         
-        gravity_download_source( s, filename, headers, post_values)
+        print("::: Getting {0} list...".format(domain) , end='')
+        try:
+            gravity_download_source( s, filename, headers, post_values)
+            print("successful!")
+        except urllib.error.HTTPError as inst:
+            print("encountered error {0} {1}.".format(inst.code, inst.reason) )
+        except:
+            print("encountered an unknown error:", sys.exc_info()[0] )
+        else:
+            # Add to sources_out a 2-tuple of the source and filename.
+            sources_out.append( ( s, filename ) )
+        #end else
         
         i = i + 1
     #end for s in sources:
+    
+    return sources_out
 #end def gravity_spinup(sources : list):
 
 ########################
@@ -103,4 +130,10 @@ if os.path.isfile(pyhole.adlists_file):
 else:
     adlists_file = pyhole.adlists_default
 #end else
+
+# Get our sources
+sources = gravity_collapse(adlists_file)
+
+# Download our sources.  sources_out is a list of 2-tuples with URLs and filenames.
+sources_out = gravity_spinup(sources)
 
