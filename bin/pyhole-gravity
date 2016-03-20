@@ -66,6 +66,7 @@ if pyhole.config['Network'].get('use_ipv6') == 'True':
 
 def gravity_collapse(adlists_file):
     """Determine our adlist sources, and output as a list."""
+    
     with open(adlists_file, 'rt') as f:
         # We need all lines that are not blank and are not comments.
         
@@ -90,6 +91,9 @@ def gravity_collapse(adlists_file):
 
 def gravity_download_source(url : str, destination_filename : str, headers = {}, post_values = {} ):
     """Download the source to a file, using any headers or POST data required."""
+    # Unlike curl in the original Pi-Hole, with urllib we don't seem to have
+    # the facility to download filex newer than xyz datetime.
+    # So empty files here are leaning more towards errors.
     
     # We will first save to a temp file, so that if our result is an empty file
     # then we won't overwrite an old nonempty file.  So let's initialise one.
@@ -125,7 +129,7 @@ def gravity_download_source(url : str, destination_filename : str, headers = {},
 
 def gravity_spinup(sources : list):
     """Download each source to a file."""
-    
+    print(":::")
     i = 0
     sources_out = []
     for s in sources:
@@ -210,8 +214,9 @@ def gravity_spinup(sources : list):
 def gravity_advanced(source_files, destination_filename):
     """Read all of the source files, remove all comments, and outputs just the domain."""
     
-    # This looks inefficient but runs surprisingly fast!
+    print("::: Aggregating list of domains and formatting to remove comments...")
     
+    # This looks inefficient but runs surprisingly fast!
     with open (destination_filename, 'wt') as outfile:
         for s in source_files:
             with open(s, 'rt') as infile:
@@ -245,9 +250,8 @@ def gravity_advanced(source_files, destination_filename):
 
 def gravity_unique( source_filename, destination_filename ):
     """Sort and remove duplicates"""
-    
+    print("::: Removing duplicate domains....")
     # The 'sort' binary still seems the best way to do this.
-    
     cmd = 'sort -u "{0}" > "{1}"'.format(source_filename, destination_filename)
     os.system(cmd)
     
@@ -258,6 +262,7 @@ def domain_hostformat(addr, domain):
 #end def add_hostname(str):
 
 def gravity_hostformat( source_filename, destination_filename, ipv4_addr = None, ipv6_addr = None ):
+    print("::: Formatting domains into a HOSTS file...")
     with open(source_filename, 'rt') as infile, open (destination_filename, 'wt') as outfile:
         # Add a dummy record to the start
         dummy = ""
@@ -283,7 +288,7 @@ def gravity_hostformat( source_filename, destination_filename, ipv4_addr = None,
 #end def gravity_hostformat( source_filename, destination_filename ):
 
 def gravity_blackbody( dir, source_files ):
-    """Delete all list.*.*.domains files are not in our source_files list."""
+    """Delete all list.*.*.domains files are not in our source_files list, and any pyhole.* files."""
     glob_string = os.path.join(dir, 'list.*.*.domains')
     files = glob.glob(glob_string)
     for f in files:
@@ -293,14 +298,29 @@ def gravity_blackbody( dir, source_files ):
     #end for
 #end def gravity_blackbody( dir, source_files )
 
+def gravity_reload():
+    print(":::")
+    print("::: Refreshing lists in dnsmasq...")
+    # Not yet implemented.
+#end def gravity_reload():
+
 ########################
 ###       Begin      ###
 ########################
 
+print(":::")
+print("::: Large gravitational pull detected at {0} {1}.".format(ipv4_addr, pyhole.config['Network'].get(interface) ) )
+print(":::")
+
+print("::: Neutrino emissions detected...")
+print(":::")
+
 # Find out if we're loading adlist.list or adlist.default
 if os.path.isfile(pyhole.adlists_file):
+    print("::: Custom adList file detected.")
     adlists_file = pyhole.adlists_file
 else:
+    print("::: No custom adlist file detected, reading from default file...")
     adlists_file = pyhole.adlists_default
 #end else
 
@@ -325,3 +345,13 @@ shutil.copyfile(p_accretiondisc, pyhole.hosts_file)
 
 # Remove any list.*.*.domains files that we aren't aware of.
 gravity_blackbody(pyhole.var_dir, source_files)
+
+# Remove the pyhole.* files; we're done with them now.
+glob_string = os.path.join(pyhole.var_dir, 'pyhole.*')
+files = glob.glob(glob_string)
+for f in files:
+    os.remove(f)
+#end for
+
+# Reload dnsmasq settings.
+gravity_reload()
