@@ -18,6 +18,8 @@
 
 # For running system commands
 import os
+# For getting our invoked arguments.
+import sys
 # For validating user provided IPs.
 import ipaddress
 # For managing our conf file
@@ -104,7 +106,7 @@ def sudo_root():
 
 def sudo_pyhole():
     if getpass.getuser() != "pyhole":
-        print("Rerunning as pyhole with sudo..."
+        print("Rerunning as pyhole with sudo...")
         os.execvp("sudo", ["sudo", "--user=pyhole"] + sys.argv)
     #end if getpass.getuser() != "pyhole":
 #end def sudo_pyhole():
