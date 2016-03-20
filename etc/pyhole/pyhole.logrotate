@@ -4,6 +4,7 @@
 	daily
 	missingok
 	notifempty
+	create 644 dnsmasq pyhole
 	delaycompress
 	compress
 }

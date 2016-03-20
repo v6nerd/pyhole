@@ -637,6 +637,9 @@ def create_pyhole_log_file():
     # Set owner to dnsmasq and group owner to pyhole, the former with write access.
     shutil.chown(pyhole_log_file, user = 'dnsmasq', group = 'pyhole')
     os.chmod(pyhole_log_file, mode = 0o644 )
+    
+    # Note that when logrotate is run, pyhole.logrotate specifies to create the new file
+    # with the above mode and owner.
 #end def create_dnsmasqd_log_file():
 
 def create_htpasswd_file(password):
