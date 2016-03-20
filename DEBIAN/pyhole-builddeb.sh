@@ -26,6 +26,6 @@ cp -R "$thisdir/../lib/pyhole" "$tmpdir/usr/lib/python3.4/pyhole"
 mkdir -p "$tmpdir/var/lib/pyhole"
 touch "$tmpdir/var/lib/.keep"
 
-dpkg-deb --build "$tmpdir" ~/pyhole.deb
+dpkg-deb --build "$tmpdir" "$thisdir/pyhole.deb"
 
 rm -rf "$tmpdir"
