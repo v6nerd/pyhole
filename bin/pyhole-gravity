@@ -28,6 +28,15 @@ import urllib.request
 
 pyhole.sudo_pyhole()
 
+# Variables for various stages of downloading and formatting the list
+# Trying to keep with the original Pi-Hole here...
+base_path = os.path.join(pyhole.var_dir, 'pyhole')
+p_matterandlight = base_path + ".0.matterandlight"  # Unused - gravity_schwarzchild combined into gravity_advanced
+p_supernova      = base_path + ".1.supernova"       # After gravity_advanced 
+p_eventhorizon   = base_path + ".2.eventhorizon"    # After gravity_unique
+p_accretiondisc  = base_path + ".3.accretiondisc"   # 
+p_eyeoftheneedle = base_path + ".4.eyeoftheneedle"  # 
+
 def gravity_collapse(adlists_file):
     """Determine our adlist sources, and output as a list."""
     with open(adlists_file, 'rt') as f:
@@ -120,6 +129,52 @@ def gravity_spinup(sources : list):
     return sources_out
 #end def gravity_spinup(sources : list):
 
+def gravity_advanced(source_files, destination_filename):
+    """Read all of the source files, remove all comments, and outputs just the domain."""
+    
+    # This looks inefficient but runs surprisingly fast!
+    
+    with open (destination_filename, 'wt') as outfile:
+        for s in source_files:
+            with open(s, 'rt') as infile:
+                for line in infile:
+                    # Remove any trailing comments - from the comment character to the end of the line
+                    line = line.partition('#')[0]
+                    line = line.partition('/')[0]
+                    # Remove all leading and trailing whitespace.
+                    # Note that this includes line breaks.
+                    line = line.strip()
+                    # If it's not blank at this point...
+                    if line:
+                        # If we split it, does it have more than one component?
+                        split_line = line.split()
+                        if len(split_line) >= 2:
+                            # If so then the domain has to be the second component.
+                            outfile.write(split_line[1])
+                        else:
+                            # If not then it has to be the only component.
+                            outfile.write(split_line[0])
+                        #end else
+                        # Put back in that line break.
+                        outfile.write("\n")
+                    #end if
+                #end for
+            #end with
+        #end for
+    #end with
+    
+#end def gravity_advanced(source_files, destination_filename):
+
+def gravity_unique( source_filename, destination_filename ):
+    """Sort and remove duplicates"""
+    
+    # The 'sort' binary still seems the best way to do this.
+    
+    cmd = 'sort -u "{0}" > "{1}"'.format(source_filename, destination_filename)
+    os.system(cmd)
+    
+#end def gravity_unique( infile, outfile ):
+
 ########################
 ###       Begin      ###
 ########################
@@ -135,5 +190,9 @@ else:
 sources = gravity_collapse(adlists_file)
 
 # Download our sources.  sources_out is a list of 2-tuples with URLs and filenames.
-sources_out = gravity_spinup(sources)
+sources_downloaded = gravity_spinup(sources)
 
+source_files = [ x[1] for x in sources_downloaded ]
+
+gravity_schwarzchild(source_files, p_supernova)
+gravity_unique(p_supernova, p_eventhorizon)
