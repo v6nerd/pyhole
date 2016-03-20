@@ -1,0 +1,9 @@
+/var/log/pyhole.log
+{
+	rotate 3
+	daily
+	missingok
+	notifempty
+	delaycompress
+	compress
+}

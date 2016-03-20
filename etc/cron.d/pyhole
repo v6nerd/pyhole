@@ -16,3 +16,6 @@
 
 # Updates ad sources every week
 
+
+# Force a log rotate every day at 23:58.
+58 23   * * *   root    /usr/sbin/logrotate --force /etc/pyhole/pyhole.logrotate

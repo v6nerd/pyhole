@@ -716,21 +716,13 @@ def enable_webserver(web_server):
     #end if
 #end def enable_webserver(web_server):
 
-def install_sudoers_file():
-    sudoers_file_in  = os.path.join(pyhole.share_dir, 'conf/sudoers.d/pyhole')
+def set_sudoers_file_permissions():
+    # Sudoers file is automatically installed by the deb package.
+    # Just need to set permissions.
     sudoers_file_out = '/etc/sudoers.d/pyhole'
     
-    # Mode 440 as in /etc/sudoers.d/README
-    shutil.copy(sudoers_file_in, sudoers_file_out)
     os.chmod(sudoers_file_out, mode = 0o440 )
-#end def install_sudoers_file():
-
-def install_cron_file():
-    cron_file_in  = os.path.join(pyhole.share_dir, 'conf/cron.d/pyhole.cron')
-    cron_file_out = '/etc/cron.d/pyhole.cron'
-    
-    shutil.copy(cron_file_in, cron_file_out)
-#end def install_cron_file():
+#end def set_sudoers_file_permissions():
 
 def create_pyhole_user():
     # We are OK to just go ahead and run useradd even if the user already exists.
@@ -847,12 +839,11 @@ pyhole.write_config()
 create_pyhole_user()
 set_dir_permissions()
 
-# Write / copy config.
+# Create configs & set permissions.
 
 install_dnsmasq_config(dns_provider, interface)
 create_pyhole_log_file()
-install_sudoers_file()
-install_cron_file()
+set_sudoers_file_permissions()
 htpasswd_file = create_htpasswd_file(web_password)
 
 install_webserver_config(web_server, interface, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file)
