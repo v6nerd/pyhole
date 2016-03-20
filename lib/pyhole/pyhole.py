@@ -22,6 +22,8 @@ import os
 import ipaddress
 # For managing our conf file
 import configparser
+# For finding out the current user.
+import getpass
 
 ########################
 ###     Variables    ###
@@ -87,3 +89,22 @@ def write_config():
 
 # Read the config
 read_config()
+
+########################
+###       Sudo       ###
+########################
+
+def sudo_root():
+    # If not root, rerun as root with sudo.
+    if os.geteuid() != 0:
+        print("Rerunning as root with sudo...")
+        os.execvp("sudo", ["sudo"] + sys.argv)
+    #end if os.geteuid() != 0:
+#end def sudo_root():
+
+def sudo_pyhole():
+    if getpass.getuser() != "pyhole":
+        print("Rerunning as pyhole with sudo..."
+        os.execvp("sudo", ["sudo", "--user=pyhole"] + sys.argv)
+    #end if getpass.getuser() != "pyhole":
+#end def sudo_pyhole():

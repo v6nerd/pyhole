@@ -39,12 +39,8 @@ import shutil
 # Our very own module!
 from pyhole import pyhole
 
-
 # If not root, rerun as root with sudo.
-if os.geteuid() != 0:
-    print("Rerunning as root with sudo...")
-    os.execvp("sudo", ["sudo"] + sys.argv)
-#end if os.geteuid() != 0:
+sudo_root()
 
 ########################
 ###     Variables    ###
@@ -671,7 +667,9 @@ def install_webserver_config(web_server, interface : str, ipv4_address, web_root
         apache_admin_out = '/etc/apache2/sites-available/pihole-admin.conf'
         
         copy_and_replace(apache_admin_in, apache_admin_out, replacements)
-    #end elif web_server == "apache":
+    elif web_server == "Manual":
+        pass
+    #end elif
     
 #end def install_webserver_config(web_server):
 
@@ -696,6 +694,18 @@ def install_webserver(web_root_pyhole, web_root_admin):
     
 #end def install_webserver(web_root_pyhole, web_root_admin):
 
+def enable_webserver(web_server):
+    if web_server == "lighttpd":
+        os.system("lighty-enable-mod fastcgi fastcgi-php")
+    if web_server == "apache":
+        os.system("a2enmod headers rewrite")
+        os.system("a2ensite pyhole")
+        os.system("a2ensite pihole-admin")
+    if web_server == "Manual":
+        pass
+    #end if
+#end def enable_webserver(web_server):
+
 def install_sudoers_file():
     sudoers_file_in  = os.path.join(pyhole.share_dir, 'conf/sudoers.d/pyhole')
     sudoers_file_out = '/etc/sudoers.d/pyhole'
@@ -704,6 +714,13 @@ def install_sudoers_file():
     shutil.copy(sudoers_file_in, sudoers_file_out)
     os.chmod(sudoers_file_out, mode = 0o440 )
 #end def install_sudoers_file():
+
+def install_cron_file():
+    cron_file_in  = os.path.join(pyhole.share_dir, 'conf/cron.d/pyhole.cron')
+    cron_file_out = '/etc/cron.d/pyhole.cron'
+    
+    shutil.copy(cron_file_in, cron_file_out)
+#end def install_cron_file():
 
 def create_pyhole_user():
     # We are OK to just go ahead and run useradd even if the user already exists.
@@ -818,6 +835,7 @@ pyhole.write_config()
 
 install_dnsmasq_config(dns_provider, interface)
 install_sudoers_file()
+install_cron_file()
 htpasswd_file = create_htpasswd_file(web_password)
 
 install_webserver_config(web_server, interface, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file)
