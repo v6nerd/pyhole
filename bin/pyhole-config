@@ -659,12 +659,12 @@ def install_webserver_config(web_server, interface : str, ipv4_address, web_root
         copy_and_replace(lighttpd_conf_in, lighttpd_conf_out, replacements)
     elif web_server == "apache":
         apache_pyhole_in = os.path.join(pyhole.share_dir, 'conf/apache/pyhole.conf')
-        apache_pyhole_out = '/etc/apache2/sites-available/pihole.conf'
+        apache_pyhole_out = '/etc/apache2/sites-available/pyhole.conf'
         
         copy_and_replace(apache_pyhole_in, apache_pyhole_out, replacements)
         
         apache_admin_in = os.path.join(pyhole.share_dir, 'conf/apache/pyhole-admin.conf')
-        apache_admin_out = '/etc/apache2/sites-available/pihole-admin.conf'
+        apache_admin_out = '/etc/apache2/sites-available/pyhole-admin.conf'
         
         copy_and_replace(apache_admin_in, apache_admin_out, replacements)
     elif web_server == "Manual":
@@ -700,7 +700,7 @@ def enable_webserver(web_server):
     if web_server == "apache":
         os.system("a2enmod headers rewrite")
         os.system("a2ensite pyhole")
-        os.system("a2ensite pihole-admin")
+        os.system("a2ensite pyhole-admin")
     if web_server == "Manual":
         pass
     #end if
