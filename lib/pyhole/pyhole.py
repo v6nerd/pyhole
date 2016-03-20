@@ -41,6 +41,9 @@ conf_file_path = os.path.join(config_dir, 'pyhole.conf')
 adlists_default = os.path.join(config_dir, 'adlists.default')
 adlists_file    = os.path.join(config_dir, 'adlists.list')
 
+whitelist_file  = os.path.join(config_dir, 'whitelist.txt')
+blacklist_file  = os.path.join(config_dir, 'blacklist.txt')
+
 ########################
 ##  Helper Functions  ##
 ########################
