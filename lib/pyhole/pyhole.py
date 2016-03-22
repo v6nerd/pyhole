@@ -127,12 +127,12 @@ read_config()
 ipv4_addr = None
 ipv6_addr = None
 
-if pyhole.config['Network'].get('use_ipv4') == 'True':
-    ipv4_addr = pyhole.config['Network']['ipv4_addr']
+if config['Network'].get('use_ipv4') == 'True':
+    ipv4_addr = config['Network']['ipv4_addr']
 #end if
 
-if pyhole.config['Network'].get('use_ipv6') == 'True':
-    ipv6_addr = pyhole.config['Network']['ipv6_addr']
+if config['Network'].get('use_ipv6') == 'True':
+    ipv6_addr = config['Network']['ipv6_addr']
 #end if
 
 ########################
