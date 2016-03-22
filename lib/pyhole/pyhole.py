@@ -148,6 +148,7 @@ def sudo_root():
 #end def sudo_root():
 
 def sudo_pyhole():
+    # If not pyhole, rerun as pyhole with sudo.
     if getpass.getuser() != "pyhole":
         print("Rerunning as pyhole with sudo...")
         os.execvp("sudo", ["sudo", "--user=pyhole"] + sys.argv)
@@ -343,7 +344,7 @@ def gravity_advanced(source_files, destination_filename):
 #end def gravity_advanced(source_files, destination_filename):
 
 def gravity_unique( source_filename, destination_filename ):
-    """Sort and remove duplicates"""
+    """Sort and remove duplicates."""
     print("::: Removing duplicate domains....")
     # The 'sort' binary still seems the best way to do this.
     cmd = 'sort -u "{0}" > "{1}"'.format(source_filename, destination_filename)
@@ -352,10 +353,12 @@ def gravity_unique( source_filename, destination_filename ):
 #end def gravity_unique( infile, outfile ):
 
 def domain_hostformat(addr, domain):
+    """Turn "domain" into "192.168.x.y domain"  """
     return "{0} {1}".format(addr,domain)
 #end def add_hostname(str):
 
 def gravity_hostformat( source_filename, destination_filename, ipv4_addr = None, ipv6_addr = None ):
+    """Take the domains from source_filename and write IP-Space-Domain in destination_filename."""
     print("::: Formatting domains into a HOSTS file...")
     with open(source_filename, 'rt') as infile, open (destination_filename, 'wt') as outfile:
         # Add a dummy record to the start
@@ -393,6 +396,7 @@ def gravity_blackbody( dir, source_files ):
 #end def gravity_blackbody( dir, source_files )
 
 def gravity_reload():
+    """Reload all required services."""
     print(":::")
     print("::: Refreshing lists in dnsmasq...")
     # Not yet implemented.
@@ -419,7 +423,7 @@ def write_list(destination_filename, list):
 #end def write_list(destination_filename, list):
 
 def add_list_domain(filename, list):
-    """Add the domains to the list, and return how many have been added."""
+    """Add the domains to the list file, and return how many have been added."""
     domainlist = read_list(filename)
     basename = os.path.basename(filename)
     
@@ -442,7 +446,7 @@ def add_list_domain(filename, list):
 #end def add_list_domain(filename, list):
 
 def remove_list_domain(filename, list):
-    """Remove the domains from the list, and return how many have been removed."""
+    """Remove the domains from the list file, and return how many have been removed."""
     domainlist = read_list(filename)
     basename = os.path.basename(filename)
     
@@ -465,7 +469,7 @@ def remove_list_domain(filename, list):
 #end def remove_list_domain(filename, list):
 
 def write_blacklist_hosts(destination_filename, ipv4_addr = None, ipv6_addr = None):
-    """Write the blacklists host file from the blacklist."""
+    """From the blacklist list file, write the blacklist hosts file."""
     blacklist = read_list(blacklist_file)
     
     with open (destination_filename, 'wt') as outfile:
@@ -482,15 +486,21 @@ def write_blacklist_hosts(destination_filename, ipv4_addr = None, ipv6_addr = No
     #end with
 #end def write_blacklist(destination_filename, ipv4_addr = None, ipv6_addr = None):
 
-def gravity_hosts_add_whitelist(filename):
+def gravity_hosts_add_whitelist(whitelist = None):
     """In gravity.hosts, comment out any hosts that should be whitelisted."""
-    whitelist = read_list(whitelist_file)
+    
+    # For consistency with gravity_hosts_remove_whitelist, we accept a list of
+    # domains as an argument.  However in this case this can be left blank in
+    # which case the whitelist file is used.
+    if not whitelist:
+        whitelist = read_list(whitelist_file)
+    #end if
     
     # We're not going to edit gravity.hosts in place,
     # so we will write to a temp file first.
     temp_file = tempfile.mkstemp()[1]
     
-    with open(filename, 'rt') as infile, open(temp_file, 'wt') as outfile:
+    with open(gravity_hosts, 'rt') as infile, open(temp_file, 'wt') as outfile:
         for line in infile:
             if line.startswith('#'):
                 # Any line already commented can just pass right through
@@ -522,19 +532,25 @@ def gravity_hosts_add_whitelist(filename):
     #end with
     
     # Copy the tempfile over the original and delete the temp file.
-    shutil.copyfile(temp_file, filename)
+    shutil.copyfile(temp_file, gravity_hosts)
     os.remove(temp_file)
     
-#end gravity_hosts_add_whitelist(filename):
+#end gravity_hosts_add_whitelist():
 
-def gravity_hosts_remove_whitelist(filename, unwhitelist):
+def gravity_hosts_remove_whitelist(unwhitelist):
     """In gravity.hosts, uncomment out any hosts that should be unwhitelisted."""
+    
+    # This function must be provided with an "unwhitelist" list as an argument
+    # of domains to be uncommented.
+    # The alternative to this is that we just uncomment an domains NOT in the
+    # whitelist.  This has the downside of ruining any comments a user has
+    # made themselves.
     
     # We're not going to edit gravity.hosts in place,
     # so we will write to a temp file first.
     temp_file = tempfile.mkstemp()[1]
     
-    with open(filename, 'rt') as infile, open(temp_file, 'wt') as outfile:
+    with open(gravity_hosts, 'rt') as infile, open(temp_file, 'wt') as outfile:
         for line in infile:
             if not line.startswith('#'):
                 # Any line not commented can just pass right through
@@ -567,7 +583,7 @@ def gravity_hosts_remove_whitelist(filename, unwhitelist):
     #end with
     
     # Copy the tempfile over the original and delete the temp file.
-    shutil.copyfile(temp_file, filename)
+    shutil.copyfile(temp_file, gravity_hosts)
     os.remove(temp_file)
     
-#end def gravity_hosts_remove_whitelist(filename, unwhitelist):
+#end def gravity_hosts_remove_whitelist(gravity_hosts, unwhitelist):
