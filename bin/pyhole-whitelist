@@ -40,10 +40,10 @@ args = parser.parse_args()
 
 if args.delete:
     changed = pyhole.remove_list_domain(pyhole.whitelist_file, args.domain)
-    gravity_hosts_remove_whitelist(args.domain)
+    pyhole.gravity_hosts_remove_whitelist(args.domain)
 else:
     changed = pyhole.add_list_domain(pyhole.whitelist_file, args.domain)
-    gravity_hosts_add_whitelist(args.domain)
+    pyhole.gravity_hosts_add_whitelist(args.domain)
 #end else:
 
 if args.force or changed > 0:
