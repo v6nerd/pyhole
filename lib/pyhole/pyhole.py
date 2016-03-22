@@ -216,7 +216,7 @@ def gravity_spinup(sources : list):
         
         # Generate our save filename.
         basename = "list.{0}.{1}.domains".format( i, domain )
-        filename = os.path.join( pyhole.var_dir, basename )
+        filename = os.path.join( var_dir, basename )
         
         # Our default headers and post values...
         headers = {
