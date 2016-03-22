@@ -90,7 +90,7 @@ pyhole.gravity_unique(p_supernova, p_eventhorizon)
 pyhole.gravity_hostformat(p_eventhorizon, p_accretiondisc, ipv4_addr, ipv6_addr)
 
 # Copy this file to the final location.
-shutil.copyfile(p_accretiondisc, pyhole.hosts_file)
+shutil.copyfile(p_accretiondisc, pyhole.gravity_hosts)
 
 # Remove any list.*.*.domains files that we aren't aware of.
 pyhole.gravity_blackbody(pyhole.var_dir, source_files)

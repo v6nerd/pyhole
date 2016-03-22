@@ -62,7 +62,8 @@ adlists_file    = os.path.join(config_dir, 'adlists.list')
 whitelist_file  = os.path.join(config_dir, 'whitelist.txt')
 blacklist_file  = os.path.join(config_dir, 'blacklist.txt')
 
-hosts_file      = os.path.join(var_dir   , 'gravity.list' )
+gravity_hosts      = os.path.join(var_dir   , 'gravity.hosts'   )
+blacklist_hosts    = os.path.join(var_dir   , 'blacklist.hosts' )
 
 ########################
 ##  Helper Functions  ##
@@ -381,4 +382,85 @@ def gravity_reload():
     # Not yet implemented.
 #end def gravity_reload():
 
+def read_list(source_filename):
+    """Read the blacklist or whitelist file into a list object."""
+    with open(source_filename) as f:
+        # f.readlines() does not remove newlines
+        # f.read.splitlines() does
+        list = f.read().splitlines()
+    #end with
+    return list
+#end def read_list(source_filename):
+
+def write_list(destination_filename, list):
+    """Write a list object back to the blacklist or whitelist file"""
+    with open (destination_filename, 'wt') as f:
+        for domain in list:
+            f.write(domain)
+            f.write("\n")
+        #end for
+    #end with
+#end def write_list(destination_filename, list):
+
+def add_blacklist_domain(list):
+    """Add the domains to the blacklist, and return how many have been blacklisted."""
+    blacklist = read_list(blacklist_file)
+    
+    added = 0
+    for domain in list:
+        if domain in blacklist:
+            print("::: {0} already exists in blacklist.txt! No need to add".format(domain) )
+        else:
+            added += 1
+            print("::: Adding {0} to blacklist file...".format(domain) )
+            blacklist.append(domain)
+            write_list(blacklist_file, blacklist)
+        #end else
+    #end for
+    
+    # Only if there are new domains do we write the list.
+    if added > 0: write_list(blacklist_file, blacklist)
+    
+    return added
+    
+#end def add_blacklist_domain(domain):
+
+def remove_blacklist_domain(list):
+    blacklist = read_list(blacklist_file)
+    
+    removed = 0
+    for domain in list:
+        if domain in blacklist:
+            removed += 1
+            print("::: Un-blacklisting {0}...".format(domain) )
+            blacklist.remove(domain)
+        else:
+            print("::: {0} is NOT blacklisted! No need to remove".format(domain) )
+        #end else
+    #end for
+    
+    # Only if there are domains to remove do we write the list.
+    if removed > 0: write_list(blacklist_file, blacklist)
+    
+    return removed
+    
+#end def remove_blacklist_domain(domain):
+
+def write_blacklist_hosts(destination_filename, ipv4_addr = None, ipv6_addr = None):
+    """Write the blacklists host file from the blacklist."""
+    blacklist = read_list(blacklist_file)
+    
+    with open (destination_filename, 'wt') as outfile:
+        for domain in blacklist:
+            if ipv4_addr:
+                outfile.write( domain_hostformat(ipv4_addr, domain) )
+                outfile.write("\n")
+            #end if
+            if ipv6_addr:
+                outfile.write( domain_hostformat(ipv6_addr, domain) )
+                outfile.write("\n")
+            #end if
+        #end for
+    #end with
+#end def write_blacklist(destination_filename, ipv4_addr = None, ipv6_addr = None):
 
