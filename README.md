@@ -31,7 +31,14 @@ Issues in **bold** are work in progress.
 
 ## Regressions from Pi-hole
 
-- **No one-line installer (`curl -L install.pi-hole.net | bash`).  Dependencies need to be installed manually.**
-- lighttpd's mod_auth htpasswd files to be MD5, so stores passwords in MD5.
+- **No one-line installer (`curl -L install.pi-hole.net | bash`).  Dependencies need to be installed manually with apt.**
+- The admin interface password is stored as an MD5 hash, as lighttpd's mod_auth requires htpasswd files use MD5.
+- Some options missing, such as --quiet switches.
 - **Very little space-related output.**
 - Unoriginal and uninspired name.
+
+# Misc changes
+
+Blacklisting and whitelisting are greatly simplified.
+- Blacklisted domains are now written to a separate hosts file, not the main gravity hosts file.  dnsmasq uses both gravity.hosts and blacklist.hosts.
+- Whitelisted domains are searched for in the main gravity hosts file, and if present then **commented**.  Removing a domain from the whitelist uncomments the line.  This also fixes an issue where un-whitelisting a domain adds a blocking entry into the hosts file where one may have not existed.

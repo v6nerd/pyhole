@@ -482,3 +482,92 @@ def write_blacklist_hosts(destination_filename, ipv4_addr = None, ipv6_addr = No
     #end with
 #end def write_blacklist(destination_filename, ipv4_addr = None, ipv6_addr = None):
 
+def gravity_hosts_add_whitelist(filename):
+    """In gravity.hosts, comment out any hosts that should be whitelisted."""
+    whitelist = read_list(whitelist_file)
+    
+    # We're not going to edit gravity.hosts in place,
+    # so we will write to a temp file first.
+    temp_file = tempfile.mkstemp()[1]
+    
+    with open(filename, 'rt') as infile, open(temp_file, 'wt') as outfile:
+        for line in infile:
+            if line.startswith('#'):
+                # Any line already commented can just pass right through
+                outfile.write(line)
+            else:
+                # Split into two components - IP and domain
+                split_line = line.split()
+                
+                # Do we comment it out?  i.e. Is it one of the whitelist domains?
+                comment = False
+                # If any one domain matches then we are going to comment this out.
+                for domain in whitelist:
+                    # We use strip() in the comparison to remove the /n
+                    if split_line[1].strip() == domain:
+                        comment = True
+                    #end if
+                #end for:
+                
+                if comment:
+                    # Just add a hash onto the start of the line
+                    outfile.write('#')
+                    outfile.write(line)
+                else:
+                    # Write the original line
+                    outfile.write(line)
+                #end else
+            #end else
+        #end for
+    #end with
+    
+    # Copy the tempfile over the original and delete the temp file.
+    shutil.copyfile(temp_file, filename)
+    os.remove(temp_file)
+    
+#end gravity_hosts_add_whitelist(filename):
+
+def gravity_hosts_remove_whitelist(filename, unwhitelist):
+    """In gravity.hosts, uncomment out any hosts that should be unwhitelisted."""
+    
+    # We're not going to edit gravity.hosts in place,
+    # so we will write to a temp file first.
+    temp_file = tempfile.mkstemp()[1]
+    
+    with open(filename, 'rt') as infile, open(temp_file, 'wt') as outfile:
+        for line in infile:
+            if not line.startswith('#'):
+                # Any line not commented can just pass right through
+                # Getting this logic out of the way now will probably make a huge impact to speed.
+                outfile.write(line)
+            else:
+                # Split into two components - IP and domain
+                split_line = line.split()
+                
+                # Do we uncomment it out?  i.e. Is it one of the unwhitelist domains?
+                uncomment = False
+                # If any one domain matches then we are going to comment this out.
+                for domain in unwhitelist:
+                    # We use strip() in the comparison to remove the /n
+                    if split_line[1].strip() == domain:
+                        uncomment = True
+                    #end if
+                #end for:
+                
+                if uncomment:
+                    # Remove leading hashes and then write
+                    line = line.lstrip('#')
+                    outfile.write(line)
+                else:
+                    # Write the original line
+                    outfile.write(line)
+                #end else
+            #end else
+        #end for
+    #end with
+    
+    # Copy the tempfile over the original and delete the temp file.
+    shutil.copyfile(temp_file, filename)
+    os.remove(temp_file)
+    
+#end def gravity_hosts_remove_whitelist(filename, unwhitelist):
