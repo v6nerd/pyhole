@@ -24,13 +24,6 @@ import os
 import shutil
 # For wildcard file / directory searches.
 import glob
-# For getting our exception text
-import sys
-# For downloading files.
-import urllib.parse
-import urllib.request
-# For temporary files
-import tempfile
 
 # Rerun as the pyhole user.
 pyhole.sudo_pyhole()
