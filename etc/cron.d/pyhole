@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Updates ad sources every week
-
+# Update the ad sources once a week on Sunday at 01:59
+59 1    * * 7   pyhole    /usr/bin/pyhole-gravity
 
 # Force a log rotate every day at 23:58.
 # We specifically desire the log to be rotated at the end/start of each day.
