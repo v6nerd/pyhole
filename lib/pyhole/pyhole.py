@@ -500,6 +500,8 @@ def gravity_hosts_add_whitelist(whitelist = None):
     # so we will write to a temp file first.
     temp_file = tempfile.mkstemp()[1]
     
+    commented = 0
+    
     with open(gravity_hosts, 'rt') as infile, open(temp_file, 'wt') as outfile:
         for line in infile:
             if line.startswith('#'):
@@ -520,6 +522,7 @@ def gravity_hosts_add_whitelist(whitelist = None):
                 #end for:
                 
                 if comment:
+                    commented += 1
                     # Just add a hash onto the start of the line
                     outfile.write('#')
                     outfile.write(line)
@@ -531,8 +534,12 @@ def gravity_hosts_add_whitelist(whitelist = None):
         #end for
     #end with
     
-    # Copy the tempfile over the original and delete the temp file.
-    shutil.copyfile(temp_file, gravity_hosts)
+    if commented > 0:
+        # Copy the tempfile over the original
+        shutil.copyfile(temp_file, gravity_hosts)
+    #end if
+    
+    # Delete the temp file.
     os.remove(temp_file)
     
 #end gravity_hosts_add_whitelist():
@@ -549,6 +556,8 @@ def gravity_hosts_remove_whitelist(unwhitelist):
     # We're not going to edit gravity.hosts in place,
     # so we will write to a temp file first.
     temp_file = tempfile.mkstemp()[1]
+    
+    uncommented = 0
     
     with open(gravity_hosts, 'rt') as infile, open(temp_file, 'wt') as outfile:
         for line in infile:
@@ -571,6 +580,7 @@ def gravity_hosts_remove_whitelist(unwhitelist):
                 #end for:
                 
                 if uncomment:
+                    uncommented += 1
                     # Remove leading hashes and then write
                     line = line.lstrip('#')
                     outfile.write(line)
@@ -582,8 +592,12 @@ def gravity_hosts_remove_whitelist(unwhitelist):
         #end for
     #end with
     
-    # Copy the tempfile over the original and delete the temp file.
-    shutil.copyfile(temp_file, gravity_hosts)
+    if uncommented > 0:
+        # Copy the tempfile over the original.
+        shutil.copyfile(temp_file, gravity_hosts)
+    #end if
+    
+    # Delete the temp file.
     os.remove(temp_file)
     
 #end def gravity_hosts_remove_whitelist(gravity_hosts, unwhitelist):

@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+# pyhole - a clone of the Pi-hole DNS adblocker, written in Python.
+# pyhole  (c) 2016 by ryt51V
+# Pi-Hole (c) 2015, 2016 by Jacob Salmela
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Our very own module!
+from pyhole import pyhole
+# For parsing arguments and showing --help
+import argparse
+
+# Parse arguments
+
+parser = argparse.ArgumentParser(description='Immediately whitelists one or more domains in the hosts file.')
+
+parser.add_argument('-d', '--delete', action='store_true',
+                   help="Remove domains from the whitelist instead of adding.")
+parser.add_argument('-n', '--no-reload', action='store_true',
+                   help="Update whitelist without refreshing dnsmasq.")
+parser.add_argument('-f', '--force', action='store_true',
+                   help="Force updating of the hosts files, even if there are no changes.")
+# parser.add_argument('-q', '--quiet', action='store_true',
+#                    help="Output is less verbose.")
+parser.add_argument('domain', nargs='*',
+                   help="The domain you wish to add to (or remove from) the whitelist.")
+
+args = parser.parse_args()
+
+if args.delete:
+    changed = pyhole.remove_list_domain(pyhole.whitelist_file, args.domain)
+    gravity_hosts_remove_whitelist(args.domain)
+else:
+    changed = pyhole.add_list_domain(pyhole.whitelist_file, args.domain)
+    gravity_hosts_add_whitelist(args.domain)
+#end else:
+
+if args.force or changed > 0:
+    if not args.no_reload:
+        pyhole.gravity_reload()
+    #end if
+#end if
