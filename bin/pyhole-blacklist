@@ -49,5 +49,5 @@ else:
 #   OR
 #   - Changes have been made AND --no-reload has NOT been specified.
 if args.force or (changed > 0 and not args.no_reload):
-    gravity_reload()
+    pyhole.gravity_reload()
 #end if
