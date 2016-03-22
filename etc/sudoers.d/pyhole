@@ -1,1 +1,2 @@
 # sudoers.d file for pyhole
+pyhole  ALL=(ALL:ALL) NOPASSWD: /usr/bin/pyhole-reloadservices

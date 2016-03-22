@@ -34,6 +34,7 @@ Issues in **bold** are work in progress.
 - **No one-line installer (`curl -L install.pi-hole.net | bash`).  Dependencies need to be installed manually with apt.**
 - The admin interface password is stored as an MD5 hash, as lighttpd's mod_auth requires htpasswd files use MD5.
 - Some options missing, such as --quiet switches.
+- No spinner `-\|/-`
 - **Very little space-related output.**
 - Unoriginal and uninspired name.
 
