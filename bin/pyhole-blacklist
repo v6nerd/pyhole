@@ -45,7 +45,7 @@ else:
 #end else:
 
 if args.force or changed > 0:
-    write_blacklist_hosts(pyhole.blacklist_hosts, pyhole.ipv4_addr, pyhole.ipv6_addr):
+    write_blacklist_hosts(pyhole.blacklist_hosts, pyhole.ipv4_addr, pyhole.ipv6_addr)
     if not args.noreload:
         pyhole.gravity_reload()
     #end if
