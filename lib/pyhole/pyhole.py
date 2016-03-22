@@ -120,6 +120,22 @@ def write_config():
 read_config()
 
 ########################
+###      Network     ###
+########################
+
+# Read our IP details from our config file.
+ipv4_addr = None
+ipv6_addr = None
+
+if pyhole.config['Network'].get('use_ipv4') == 'True':
+    ipv4_addr = pyhole.config['Network']['ipv4_addr']
+#end if
+
+if pyhole.config['Network'].get('use_ipv6') == 'True':
+    ipv6_addr = pyhole.config['Network']['ipv6_addr']
+#end if
+
+########################
 ###       Sudo       ###
 ########################
 
@@ -402,49 +418,51 @@ def write_list(destination_filename, list):
     #end with
 #end def write_list(destination_filename, list):
 
-def add_blacklist_domain(list):
-    """Add the domains to the blacklist, and return how many have been blacklisted."""
-    blacklist = read_list(blacklist_file)
+def add_list_domain(filename, list):
+    """Add the domains to the list, and return how many have been added."""
+    domainlist = read_list(filename)
+    basename = os.path.basename(filename)
     
     added = 0
     for domain in list:
-        if domain in blacklist:
-            print("::: {0} already exists in blacklist.txt! No need to add".format(domain) )
+        if domain in domainlist:
+            print("::: {0} already exists in {1}! No need to add".format(domain, basename) )
         else:
             added += 1
-            print("::: Adding {0} to blacklist file...".format(domain) )
-            blacklist.append(domain)
-            write_list(blacklist_file, blacklist)
+            print("::: Adding {0} to {1}...".format(domain, basename) )
+            domainlist.append(domain)
         #end else
     #end for
     
     # Only if there are new domains do we write the list.
-    if added > 0: write_list(blacklist_file, blacklist)
+    if added > 0: write_list(filename, domainlist)
     
     return added
     
-#end def add_blacklist_domain(domain):
+#end def add_list_domain(filename, list):
 
-def remove_blacklist_domain(list):
-    blacklist = read_list(blacklist_file)
+def remove_list_domain(filename, list):
+    """Remove the domains from the list, and return how many have been removed."""
+    domainlist = read_list(filename)
+    basename = os.path.basename(filename)
     
     removed = 0
     for domain in list:
-        if domain in blacklist:
+        if domain in domainlist:
             removed += 1
-            print("::: Un-blacklisting {0}...".format(domain) )
-            blacklist.remove(domain)
+            print("::: Removing {0} from {1}...".format(domain, basename) )
+            domainlist.remove(domain)
         else:
-            print("::: {0} is NOT blacklisted! No need to remove".format(domain) )
+            print("::: {0} does NOT exist in {1}! No need to remove".format(domain, basename) )
         #end else
     #end for
     
     # Only if there are domains to remove do we write the list.
-    if removed > 0: write_list(blacklist_file, blacklist)
+    if removed > 0: write_list(filename, domainlist)
     
     return removed
     
-#end def remove_blacklist_domain(domain):
+#end def remove_list_domain(filename, list):
 
 def write_blacklist_hosts(destination_filename, ipv4_addr = None, ipv6_addr = None):
     """Write the blacklists host file from the blacklist."""

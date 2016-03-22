@@ -41,24 +41,12 @@ p_eventhorizon   = base_path + ".2.eventhorizon"    # After pyhole.gravity_uniqu
 p_accretiondisc  = base_path + ".3.accretiondisc"   # After pyhole.gravity_hostformat
 p_eyeoftheneedle = base_path + ".4.eyeoftheneedle"  # Unused - just like original gravity.sh
 
-# Read our IP details from our config file.
-ipv4_addr = None
-ipv6_addr = None
-
-if pyhole.config['Network'].get('use_ipv4') == 'True':
-    ipv4_addr = pyhole.config['Network']['ipv4_addr']
-#end if
-
-if pyhole.config['Network'].get('use_ipv6') == 'True':
-    ipv6_addr = pyhole.config['Network']['ipv6_addr']
-#end if
-
 ########################
 ###       Begin      ###
 ########################
 
 print(":::")
-print("::: Large gravitational pull detected at {0} {1}.".format(ipv4_addr, pyhole.config['Network'].get('interface') ) )
+print("::: Large gravitational pull detected at {0} {1}.".format(pyhole.ipv4_addr, pyhole.config['Network'].get('interface') ) )
 print(":::")
 
 print("::: Neutrino emissions detected...")
@@ -87,7 +75,7 @@ pyhole.gravity_advanced(source_files, p_supernova)
 # Sort and remove duplicates
 pyhole.gravity_unique(p_supernova, p_eventhorizon)
 # Re-add the IPs to make a hosts file.
-pyhole.gravity_hostformat(p_eventhorizon, p_accretiondisc, ipv4_addr, ipv6_addr)
+pyhole.gravity_hostformat(p_eventhorizon, p_accretiondisc, pyhole.ipv4_addr, pyhole.ipv6_addr)
 
 # Copy this file to the final location.
 shutil.copyfile(p_accretiondisc, pyhole.gravity_hosts)
