@@ -399,7 +399,7 @@ def gravity_reload():
     """Reload all required services."""
     print(":::")
     print("::: Refreshing lists in dnsmasq...")
-    # Not yet implemented.
+    os.system("sudo --non-interactive /usr/bin/pyhole-reloadservices")
 #end def gravity_reload():
 
 def read_list(source_filename):
