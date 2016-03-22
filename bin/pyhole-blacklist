@@ -39,9 +39,9 @@ parser.add_argument('domain', nargs='*',
 args = parser.parse_args()
 
 if args.delete:
-    changed = pyhole.remove_list_domain(args.domain, pyhole.blacklist_file)
+    changed = pyhole.remove_list_domain(pyhole.blacklist_file, args.domain)
 else:
-    changed = pyhole.add_list_domain(args.domain, pyhole.blacklist_file)
+    changed = pyhole.add_list_domain(pyhole.blacklist_file, args.domain)
 #end else:
 
 if args.force or changed > 0:
