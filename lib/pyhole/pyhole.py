@@ -124,7 +124,7 @@ def check_configured():
     if config['Network'].get('pyhole_configured') == "True":
         pass
     else:
-        printf("pyhole has not yet been configured.  Please configure pyhole by running pyhole-config.")
+        print("pyhole has not yet been configured.  Please configure pyhole by running pyhole-config.")
         sys.exit(1)
     #end else:
 # def check_configured():
