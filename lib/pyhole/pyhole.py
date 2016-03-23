@@ -601,3 +601,37 @@ def gravity_hosts_remove_whitelist(unwhitelist):
     os.remove(temp_file)
     
 #end def gravity_hosts_remove_whitelist(gravity_hosts, unwhitelist):
+
+def pyhole_blacklist(domains, delete = False, force = False, no_reload = False):
+    
+    if delete:
+        changed = remove_list_domain(blacklist_file, domains)
+    else:
+        changed = add_list_domain(blacklist_file, domains)
+    #end else:
+
+    if force or changed > 0:
+        write_blacklist_hosts(blacklist_hosts, ipv4_addr, ipv6_addr)
+        if not no_reload:
+            gravity_reload()
+        #end if
+    #end if
+#end def pyhole_blacklist(domains, delete = False, force = False, no_reload = False):
+
+def pyhole_whitelist(domains, delete = False, force = False, no_reload = False):
+    
+    if delete:
+        changed = remove_list_domain(whitelist_file, domains)
+        gravity_hosts_remove_whitelist(domains)
+    else:
+        changed = add_list_domain(whitelist_file, domains)
+        gravity_hosts_add_whitelist(domains)
+    #end else:
+
+    if force or changed > 0:
+        if not no_reload:
+            gravity_reload()
+        #end if
+    #end if
+
+#end def pyhole_whitelist(domains, delete = False, force = False, no_reload = False):

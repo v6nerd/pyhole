@@ -45,16 +45,4 @@ parser.add_argument('domain', nargs='*',
 
 args = parser.parse_args()
 
-if args.delete:
-    changed = pyhole.remove_list_domain(pyhole.whitelist_file, args.domain)
-    pyhole.gravity_hosts_remove_whitelist(args.domain)
-else:
-    changed = pyhole.add_list_domain(pyhole.whitelist_file, args.domain)
-    pyhole.gravity_hosts_add_whitelist(args.domain)
-#end else:
-
-if args.force or changed > 0:
-    if not args.no_reload:
-        pyhole.gravity_reload()
-    #end if
-#end if
+pyhole.pyhole_whitelist(args.domain, delete = args.delete, force = args.force, no_reload = args.no_reload)
