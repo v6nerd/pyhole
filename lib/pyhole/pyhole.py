@@ -433,14 +433,14 @@ def pyhole_gravity():
     # Find out if we're loading adlist.list or adlist.default
     if os.path.isfile(adlists_file):
         print("::: Custom adList file detected.")
-        adlists_file = adlists_file
+        adlists_file_using = adlists_file
     else:
         print("::: No custom adlist file detected, reading from default file...")
-        adlists_file = adlists_default
+        adlists_file_using = adlists_default
     #end else
 
     # Get our sources
-    sources = gravity_collapse(adlists_file)
+    sources = gravity_collapse(adlists_file_using)
 
     # Download our sources.  sources_out is a list of 2-tuples with URLs and filenames.
     sources_downloaded = gravity_spinup(sources)
