@@ -24,7 +24,7 @@
 
 # For running system commands
 import os
-# For getting our invoked arguments and getting our exception text.
+# For getting our invoked arguments, getting our exception text, exitting.
 import sys
 # For validating user provided IPs.
 import ipaddress
@@ -118,6 +118,16 @@ def write_config():
 
 # Read the config
 read_config()
+
+def check_configured():
+    """Checks if pyhole has been configured, and if not then exits."""
+    if config['Network'].get('pyhole_configured') == "True":
+        pass
+    else:
+        printf("pyhole has not yet been configured.  Please configure pyhole by running pyhole-config.")
+        sys.exit(1)
+    #end else:
+# def check_configured():
 
 ########################
 ###      Network     ###

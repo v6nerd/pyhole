@@ -826,11 +826,14 @@ dns_provider = choose_dns_provider()
 
 # Write pyhole conf file.
 
-pyhole.config['Network']                = {}
-pyhole.config['Network']['interface']   = interface
-pyhole.config['Network']['use_ipv4']    = str(use_ipv4)
-pyhole.config['Network']['use_ipv6']    = str(use_ipv6)
-pyhole.config['Network']['ipv4_addr']   = ipv4_address['addr']
+pyhole.config['DEFAULT']                        = {}
+pyhole.config['DEFAULT']['pyhole_configured']   = True
+
+pyhole.config['Network']                        = {}
+pyhole.config['Network']['interface']           = interface
+pyhole.config['Network']['use_ipv4']            = str(use_ipv4)
+pyhole.config['Network']['use_ipv6']            = str(use_ipv6)
+pyhole.config['Network']['ipv4_addr']           = ipv4_address['addr']
 
 pyhole.config['WebServer']                      = {}
 pyhole.config['WebServer']['web_server']        = web_server

@@ -28,6 +28,9 @@ import glob
 # Rerun as the pyhole user.
 pyhole.sudo_pyhole()
 
+# Check that pyhole has been configured, and refuse to run if otherwise.
+pyhole.check_configured()
+
 ########################
 ###     Variables    ###
 ########################

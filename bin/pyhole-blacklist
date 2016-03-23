@@ -45,4 +45,7 @@ parser.add_argument('domain', nargs='*',
 
 args = parser.parse_args()
 
+# Check that pyhole has been configured, and refuse to run if otherwise.
+pyhole.check_configured()
+
 pyhole.pyhole_blacklist(args.domain, delete = args.delete, force = args.force, no_reload = args.no_reload)
