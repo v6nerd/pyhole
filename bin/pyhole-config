@@ -827,7 +827,7 @@ dns_provider = choose_dns_provider()
 # Write pyhole conf file.
 
 pyhole.config['DEFAULT']                        = {}
-pyhole.config['DEFAULT']['pyhole_configured']   = True
+pyhole.config['DEFAULT']['pyhole_configured']   = "True"
 
 pyhole.config['Network']                        = {}
 pyhole.config['Network']['interface']           = interface
