@@ -90,5 +90,8 @@ for f in files:
     os.remove(f)
 #end for
 
+# Run pyhole_whitelist to comment out any domains in whitelist.txt in gravity.hosts.
+pyhole.pyhole_whitelist( domains = None, delete = False, force = True, no_reload = True )
+
 # Reload dnsmasq settings.
 pyhole.gravity_reload()

@@ -402,6 +402,10 @@ def gravity_reload():
     os.system("sudo --non-interactive /usr/bin/pyhole-reloadservices")
 #end def gravity_reload():
 
+########################
+## White / Black list ##
+########################
+
 def read_list(source_filename):
     """Read the blacklist or whitelist file into a list object."""
     with open(source_filename) as f:
@@ -602,36 +606,55 @@ def gravity_hosts_remove_whitelist(unwhitelist):
     
 #end def gravity_hosts_remove_whitelist(gravity_hosts, unwhitelist):
 
-def pyhole_blacklist(domains, delete = False, force = False, no_reload = False):
+def pyhole_blacklist(domains = None, delete = False, force = False, no_reload = False):
     
-    if delete:
-        changed = remove_list_domain(blacklist_file, domains)
-    else:
-        changed = add_list_domain(blacklist_file, domains)
-    #end else:
+    changed = 0
+    # Either add to or remove from the list depending on the mode of operation.
+    # Only if we're actually given domains to add or remove of course.
+    if domains:
+        if delete:
+            changed = remove_list_domain(blacklist_file, domains)
+        else:
+            changed = add_list_domain(blacklist_file, domains)
+        #end else:
+    #end if domains:
 
     if force or changed > 0:
+        # Generate blacklists.hosts from our blacklist.txt file and IP addresses.
         write_blacklist_hosts(blacklist_hosts, ipv4_addr, ipv6_addr)
         if not no_reload:
             gravity_reload()
         #end if
     #end if
-#end def pyhole_blacklist(domains, delete = False, force = False, no_reload = False):
+#end def pyhole_blacklist(domains = None, delete = False, force = False, no_reload = False):
 
-def pyhole_whitelist(domains, delete = False, force = False, no_reload = False):
+def pyhole_whitelist(domains = None, delete = False, force = False, no_reload = False):
     
-    if delete:
-        changed = remove_list_domain(whitelist_file, domains)
-        gravity_hosts_remove_whitelist(domains)
-    else:
-        changed = add_list_domain(whitelist_file, domains)
-        gravity_hosts_add_whitelist(domains)
-    #end else:
-
+    changed = 0
+    # Either add to or remove from the list depending on the mode of operation.
+    # And comment or uncomment in gravity.hosts
+    # Only if we're actually given domains to add or remove.
+    if domains:
+        if delete:
+            changed = remove_list_domain(whitelist_file, domains)
+            gravity_hosts_remove_whitelist(domains)
+        else:
+            changed = add_list_domain(whitelist_file, domains)
+            gravity_hosts_add_whitelist(domains)
+        #end else:
+    #end if domains:
+    
+    # If force is specified then this applies regardless of whether we have
+    # been given any domains or not.
+    if force:
+        # In gravity.hosts, recomment all domains that are in gravity.txt.
+        gravity_hosts_add_whitelist()
+    #end if force:
+    
     if force or changed > 0:
         if not no_reload:
             gravity_reload()
         #end if
     #end if
 
-#end def pyhole_whitelist(domains, delete = False, force = False, no_reload = False):
+#end def pyhole_whitelist(domains = None, delete = False, force = False, no_reload = False):
