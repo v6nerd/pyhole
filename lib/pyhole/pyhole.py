@@ -22,7 +22,7 @@
 
 # General
 
-# For running system commands
+# For running system commands, checking files exist.
 import os
 # For getting our invoked arguments, getting our exception text, exitting.
 import sys
@@ -411,6 +411,71 @@ def gravity_reload():
     print("::: Refreshing lists in dnsmasq...")
     os.system("sudo --non-interactive /usr/bin/pyhole-reloadservices")
 #end def gravity_reload():
+
+def pyhole_gravity():
+
+    # Variables for various stages of downloading and formatting the list
+    # Trying to keep with the original Pi-Hole here...
+    base_path = os.path.join(var_dir, 'pyhole')
+    p_matterandlight = base_path + ".0.matterandlight"  # Unused - gravity_schwarzchild combined into gravity_advanced
+    p_supernova      = base_path + ".1.supernova"       # After gravity_advanced 
+    p_eventhorizon   = base_path + ".2.eventhorizon"    # After gravity_unique
+    p_accretiondisc  = base_path + ".3.accretiondisc"   # After gravity_hostformat
+    p_eyeoftheneedle = base_path + ".4.eyeoftheneedle"  # Unused - just like original gravity.sh
+
+    print(":::")
+    print("::: Large gravitational pull detected at {0} {1}.".format(ipv4_addr, config['Network'].get('interface') ) )
+    print(":::")
+
+    print("::: Neutrino emissions detected...")
+    print(":::")
+
+    # Find out if we're loading adlist.list or adlist.default
+    if os.path.isfile(adlists_file):
+        print("::: Custom adList file detected.")
+        adlists_file = adlists_file
+    else:
+        print("::: No custom adlist file detected, reading from default file...")
+        adlists_file = adlists_default
+    #end else
+
+    # Get our sources
+    sources = gravity_collapse(adlists_file)
+
+    # Download our sources.  sources_out is a list of 2-tuples with URLs and filenames.
+    sources_downloaded = gravity_spinup(sources)
+    # Split the tuple just into a list of filenames
+    source_files = [ x[1] for x in sources_downloaded ]
+
+    # Read all of the source files, remove all comments,
+    # and for now just keep the domain names.
+    gravity_advanced(source_files, p_supernova)
+    # Sort and remove duplicates
+    gravity_unique(p_supernova, p_eventhorizon)
+    # Re-add the IPs to make a hosts file.
+    gravity_hostformat(p_eventhorizon, p_accretiondisc, ipv4_addr, ipv6_addr)
+
+    # Copy this file to the final location.
+    shutil.copyfile(p_accretiondisc, gravity_hosts)
+
+    # Remove any list.*.*.domains files that we aren't aware of.
+    gravity_blackbody(var_dir, source_files)
+
+    # Remove the pyhole.* files; we're done with them now.
+    glob_string = os.path.join(var_dir, 'pyhole.*')
+    files = glob.glob(glob_string)
+    for f in files:
+        os.remove(f)
+    #end for
+
+    # Run pyhole_whitelist to comment out any domains in whitelist.txt in gravity.hosts.
+    print("::: Running pyhole-whitelist to update gravity.hosts file....")
+    pyhole_whitelist( domains = None, delete = False, force = True, no_reload = True )
+
+    # Reload dnsmasq settings.
+    gravity_reload()
+
+#end def pyhole_gravity():
 
 ########################
 ## White / Black list ##
