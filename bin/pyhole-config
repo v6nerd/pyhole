@@ -162,7 +162,7 @@ def copy_and_replace(src, dst, replacements):
 
 def show_welcome_message():
     """Display any welcome messages."""
-    message = "This program will configure your pyhole."
+    message = "This program will configure your pyhole.\n\nYou can choose cancel at any time during config and no changes will have been made to your system."
     okcancel(message)
 #end def show_welcome_message:
 
@@ -829,6 +829,7 @@ if use_ipv6:
 dns_provider = choose_dns_provider()
 
 # Above this line, no changes have been made to the system.
+okcancel("pyhole is now ready to be configured from your answers to the previous questions.  No permanent changes have been made to your system yet.\n\nShall we proceed?")
 
 ########################
 ###     Configure    ###
@@ -872,3 +873,4 @@ install_webserver(web_root_pyhole, web_root_admin)
 # Invoke pyhole-gravity
 pyhole.pyhole_gravity()
 
+d.msgbox("pyhole has completed configuration!")
