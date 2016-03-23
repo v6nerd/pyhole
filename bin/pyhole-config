@@ -100,6 +100,13 @@ def cancel_check(button):
     if (button == d.CANCEL) or (button == d.ESC): cancel_pressed()
 #end def cancel_check(button):
 
+def okcancel(text : str):
+    """Displays a message box plus a cancel button, and quits on cancel or ESC."""
+    button = d.yesno(text, yes_label = "OK", no_label = "Cancel")
+    check_cancel(button)
+    return button
+#end def okcancel(text : str):
+
 def package_is_installed(package : str):
     """Return whether a package is installed."""
     if package in apt_cache:
@@ -156,7 +163,7 @@ def copy_and_replace(src, dst, replacements):
 def show_welcome_message():
     """Display any welcome messages."""
     message = "This program will configure your pyhole."
-    d.msgbox(message)
+    okcancel(message)
 #end def show_welcome_message:
 
 def choose_web_server():
@@ -189,7 +196,7 @@ def choose_web_server():
         if ws.name != 'Manual': web_server_msgbox += "{0}\n".format(ws.package_name)
     #end for w in web_servers:
     
-    d.msgbox(web_server_msgbox)
+    okcancel(web_server_msgbox)
     
     if len(web_servers_installed) == 0:
         web_server_message = "No web servers supported for automatic configuration appear to be installed.  If you wish for pyhole to configure one for you then please cancel pyhole-config and install one of the supported web servers above.  Otherwise you may proceed with manual configuration.\n\nIf you are unsure, cancel this config and run the following before continuing:\n\nsudo apt-get install lighttpd"
@@ -771,7 +778,7 @@ web_root_pyhole, web_root_admin = choose_web_roots()
 if web_server == 'Manual':
     password_message = """The pyhole admin interface needs to be protected from unauthorised access.  You have chosen for Pi-Hole to install to a manually configured web server, so please make sure to configure authentication, for example with a username and password."""
     
-    d.msgbox(password_message)
+    okcancel(password_message)
     
     web_password_set = False
 else:
@@ -791,7 +798,7 @@ Furthermore, if you are already running another web server, it is strongly recom
 (Note that your external IP does not matter - it can be static, dynamic, whatever.)
 """
 
-d.msgbox(ip_message)
+okcancel(ip_message)
 
 # Choose an interface, whether using IPv4 and/or IPv6, and addresses.
 interface = choose_interface()
