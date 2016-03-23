@@ -5,20 +5,17 @@ It's not ready yet.  Don't bother downloading, you'll be very disappointed ;-)
 # Features
 
 - Pi-hole rewritten in Python from the ground up.
-- Tested on Raspbian and Debian.  Should work on any Debian-based distro.
-- Builds into a .deb package, which can be (relatively) easily and cleanly installed and removed with dpkg.
+- Tested on Raspbian and Debian.  Should work on any Debian-based distro, e.g. Ubuntu.
+- Builds into a .deb package, which can be more easily and cleanly installed, upgraded, and removed with dpkg.
 - Support for systems with multiple IPv4 addresses on an interface (which is strongly recommended if running another web server on the same server).
-- Support for configuring multiple web servers - currently lighttpd and apache.
-- Support for installing to any web server that you have / will manually configure yourself.
+- Support for configuring multiple web servers - currently lighttpd and apache.  Using another web server?  So long as you manually configure it correctly, pyhole can work with that too.
 - Support for upstream DNS servers running on custom ports - useful for restricted firewalls and running forwarders on the same server.
-- Admin web interface now runs on a separate port.
 - Password protect the admin web interface at the web server level.
-- All in one Git repo - admin web interface is now a subtree instead of separate.
 - Better adherence to general Linux file location and permission best practices.
 
 # Known issues
 
-Issues in **bold** are work in progress.
+Issues in **bold** are planned to be fixed.
 
 ## In common with the original Pi-hole
 
@@ -38,8 +35,14 @@ Issues in **bold** are work in progress.
 - **Very little space-related output.**
 - Unoriginal and uninspired name.
 
-# Misc changes
+# Developer notes
 
-Blacklisting and whitelisting are greatly simplified.
-- Blacklisted domains are now written to a separate hosts file, not the main gravity hosts file.  dnsmasq uses both gravity.hosts and blacklist.hosts.
-- Whitelisted domains are searched for in the main gravity hosts file, and if present then **commented**.  Removing a domain from the whitelist uncomments the line.  This also fixes an issue where un-whitelisting a domain adds a blocking entry into the hosts file where one may have not existed.
+- The install process is now split into (building/)installing the deb package, and running pyhole-config to interactively configure.
+- There does not seem to be a good declarative way to set an IP address in Linux, and distros differ heavily in this regard (even Raspbian vs Debian).  Rather than risk ruining a system, users are ONLY offered to have a static IP configured for them if (a) They are running Raspbian Jessie, AND (b) /etc/network/interfaces is in its default state.  They will also be warned heavily.
+- Significant code is offloaded into the pyhole Python module and imported into each script, making code reuse far easier.
+- gravity.list is now named gravity.hosts to distinguish from downloaded lists.
+- Blacklisting and whitelisting have been overhauled and are greatly simplified.
+	- Blacklisted domains are now written to a separate hosts file - blacklists.hosts.  dnsmasq uses both gravity.hosts and blacklist.hosts.
+	- Whitelisted domains are searched for in the main gravity hosts file, and if present then **commented**.  Removing a domain from the whitelist uncomments the line.  This also fixes an issue where un-whitelisting a domain adds a blocking entry into the hosts file where one may have not existed.
+- Admin web interface now runs on a separate port (8080).
+- The AdminLTE is now a git subtree (**not** a submodule) in the same repo.  Subtrees still let us pull from upstream, but allow the sole repo to be a point-in-time snapshot.
