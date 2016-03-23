@@ -95,10 +95,10 @@ def cancel_pressed():
     sys.exit()
 #end def cancel_pressed():
 
-def cancel_check(button):
+def check_cancel(button):
     """Checks to see if the button pressed was one that we will exit on - d.CANCEL or d.ESC."""
     if (button == d.CANCEL) or (button == d.ESC): cancel_pressed()
-#end def cancel_check(button):
+#end def check_cancel(button):
 
 def okcancel(text : str):
     """Displays a message box plus a cancel button, and quits on cancel or ESC."""
@@ -206,7 +206,7 @@ def choose_web_server():
     
     button, answer = d.menu(web_server_message, choices=choices)
     
-    cancel_check(button)
+    check_cancel(button)
     
     return answer
     
@@ -223,7 +223,7 @@ def choose_web_roots():
     
     button, answer = d.form(web_root_message, elements = elements, form_height = 5)
     
-    cancel_check(button)
+    check_cancel(button)
     
     return answer
     
@@ -242,10 +242,10 @@ def choose_webserver_password():
     
     while password_validated == False:
         button, answer1 = d.passwordbox(message1)
-        cancel_check(button)
+        check_cancel(button)
         
         button, answer2 = d.passwordbox(message2)
-        cancel_check(button)
+        check_cancel(button)
         
         error_message1 = ""
         
@@ -283,7 +283,7 @@ def choose_interface():
     while not answer:
         button, answer = d.radiolist(message, choices=choices)
         
-        cancel_check(button)
+        check_cancel(button)
     #end while not answer:
     
     return answer
@@ -305,7 +305,7 @@ def choose_ipv4_ipv6():
     while not answer:
         button, answer = d.checklist(text = message, choices=choices)
         
-        cancel_check(button)
+        check_cancel(button)
     #end while not answer:
     
     return answer
@@ -334,7 +334,7 @@ def choose_ipv4_address(interface: str):
     answer = None
     while not answer:
         button, answer = d.radiolist(text = message, choices=choices)
-        cancel_check(button)
+        check_cancel(button)
     #end while not answer:
     
     # Get the object represented by the chosen list item.
@@ -366,7 +366,7 @@ def choose_ipv6_address(interface: str):
     answer = None
     while not answer:
         button, answer = d.radiolist(text = message, choices=choices)
-        cancel_check(button)
+        check_cancel(button)
     #end while not answer:
     
     # Get the object represented by the chosen list item.
@@ -424,7 +424,7 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
     
     button, answer = d.menu(message, choices=choices)
     
-    cancel_check(button)
+    check_cancel(button)
     
     return answer
     
@@ -450,7 +450,7 @@ def choose_ipv4_new_static(interface: str, ipv4_address):
     
     while validated == False:
         button, answer = d.form(message, elements = elements, form_height = 7)
-        cancel_check(button)
+        check_cancel(button)
         
         error_message = ""
         
@@ -513,7 +513,7 @@ def choose_dns_custom_servers(quantity=2):
     while servers_validated == False:
         button, answer = d.form(message, elements = elements, form_height = form_height)
         
-        cancel_check(button)
+        check_cancel(button)
         
         servers = []
         servers_validated = True
@@ -593,7 +593,7 @@ def choose_dns_provider():
     
     button, answer = d.menu(message, choices=choices)
     
-    cancel_check(button)
+    check_cancel(button)
     
     if (answer == "Custom"):
         # If they have chosen custom, move on to asking them for their custom server.
