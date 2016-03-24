@@ -409,7 +409,7 @@ def choose_ipv4_reconfigure(interface : str, ipv4_address):
         message += "We're unable to tell whether your address {0[addr]} on interface {1} is dynamic or static.\n\n".format(ipv4_address, interface)
     #end else:
     
-    message += "Choose whether to keep your existing IPv4 address settings or reconfigure them."
+    message += "Choose whether to keep your existing IPv4 address settings or reconfigure them.\n\n"
     
     if ipv4_address_type == 'static':
         message += "If you are unsure, choose to keep your current network settings."
