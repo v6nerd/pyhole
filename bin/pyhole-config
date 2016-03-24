@@ -20,6 +20,8 @@
 from pyhole import pyhole
 # For running system commands and setting permissions.
 import os
+# For running commands and capturing stdout from them.
+import subprocess
 # For exitting.
 import sys
 # For named tuples
@@ -36,6 +38,8 @@ import configparser
 import apt
 # For looking up interfaces and IP addresses.
 import netifaces
+# For managing IP addresses
+import ipaddress
 # For file operations including ownership
 import shutil
 
@@ -338,9 +342,13 @@ def choose_ipv4_address(interface: str):
     #end while not answer:
     
     # Get the object represented by the chosen list item.
-    return addrs[int(answer)]
+    chosen = addrs[int(answer)]
     
-#def choose_ipv4_address():
+    # Convert to an IPv4Interface object
+    addr_mask = "{0[addr]}/{0[netmask]}".format(chosen)
+    return ipaddress.IPv4Interface(addr_mask)
+    
+#end def choose_ipv4_address(interface: str):
 
 def choose_ipv6_address(interface: str):
     """Allow the user to choose their IPv6 address on the provided interface."""
@@ -370,74 +378,122 @@ def choose_ipv6_address(interface: str):
     #end while not answer:
     
     # Get the object represented by the chosen list item.
-    return addrs[int(answer)]
+    chosen = addrs[int(answer)]
+    
+    # Strip any "%eth0" from the IPv6 address
+    addr_stripped = chosen['addr'].split('%')[0]
+    
+    # IPv6Interface is a bit funny.  It doesn't seem to accept IP/netmask format,
+    # only CIDR format, despite the documentation suggesting otherwise.
+    # So we will convert netmask to CIDR first.
+    cidr_suffix = ipaddress.ip_address(chosen['netmask'])._prefix_from_ip_string(chosen['netmask'])
+    
+    # Convert to an IPv6Interface object
+    addr_mask = "{0}/{1}".format(addr_stripped,cidr_suffix)
+    return ipaddress.IPv6Interface(addr_mask)
     
 #def choose_ipv6_address():
 
-def choose_ipv4_reconfigure(interface : str, ipv4_address):
-    """Check whether the IPv4 address is static."""
+def is_raspbian():
+    """Return True if running on Raspbian, false otherwise."""
+    try:
+        # Get the distro - e.g. Raspbian, Debian
+        distro = subprocess.check_output( ['lsb_release',  '-si'] ).decode('utf-8').strip()
+        if distro == "Raspbian":
+            return True
+        else:
+            return False
+        #end else:
+    except:
+        return False
+    #end except:
     
-    # There does not seem to be a decent way to tell whether or not an IPv4 address is static.
-    # We will look in the file /etc/network/interfaces for the phrases below and judge.
-    #   'iface <interface name> inet static'
-    #   'iface <interface name> inet dhcp'
-    # Yes this could fail for many reasons including use of /etc/network/interfaces, so we won't
-    # make hard decisions based on this.
-    
-    ipv4_address_type = 'unknown'
-    
-    static_search_string    = 'iface {0} inet static'.format(interface)
-    dynamic_search_string   = 'iface {0} inet dhcp'.format(interface)
-    
-    with open('/etc/network/interfaces', 'r') as f:
-        interfaces_file = f.read()
-    #end with open('/etc/network/interfaces', 'r') as f:
-    
-    if static_search_string in interfaces_file:
-        ipv4_address_type = 'static'
-    elif dynamic_search_string in interfaces_file:
-        ipv4_address_type = 'dynamic'
-    #end elif dynamic_search_string in interfaces_file:
-    
-    message = ""
-    
-    if ipv4_address_type == 'static':
-        message += "It looks like your IPv4 address {0[addr]} on interface {1} is already static, which is good.  (This may be incorrect though.)\n\n".format(ipv4_address, interface)
-    elif ipv4_address_type == 'dynamic':
-        message += "It looks like your IPv4 address {0[addr]} on interface {1} is dynamic.  (This may be incorrect though.)  You need to have a static IP.\n\n".format(ipv4_address, interface)
-    else:
-        message += "We're unable to tell whether your address {0[addr]} on interface {1} is dynamic or static.\n\n".format(ipv4_address, interface)
-    #end else:
-    
-    message += "Choose whether to keep your existing IPv4 address settings or reconfigure them.\n\n"
-    
-    if ipv4_address_type == 'static':
-        message += "If you are unsure, choose to keep your current network settings."
-    else:
-        message += "If you are unsure, choose to configure a static IPv4 address."
-    #end else:
-    
-    choices = [
-        ( "Keep"  , "Keep my IPv4 address settings as is." ),
-        ( "Configure", "Configure a static IPv4 address for me." )
-    ]
-    
-    button, answer = d.menu(message, choices=choices)
-    
-    check_cancel(button)
-    
-    return answer
-    
-#end def choose_ipv4_reconfigure(interface : str, ipv4_address):
+#end def check_raspbian():
 
-def choose_ipv4_new_static(interface: str, ipv4_address):
+def choose_ipv4_reconfigure(interface : str, ipv4_interface):
+    """Choose whether to reconfigure the ipv4 address.  Return True for reconfigure, False to keep."""
+    
+    ipv4_address = str(ipv4_interface.ip)
+    
+    if is_raspbian():
+        # If we are running on Raspbian we will offer to configure a static IPv4 address.
+        
+        message = ""
+        
+        message += "You have chosen: IPv4 address {0} on interface {1}.\n\n".format(ipv4_address, interface)
+        
+        message += "Again, pyhole must have a static IP address.  If you have already configured one then you should choose to keep these settings.  If you have not configured one, or if you are unsure, you should choose for pyhole-config to configure a static IPv4 address for you.\n\n"
+        
+        choices = [
+            ( "Keep"  , "Keep my IPv4 address settings as is." ),
+            ( "Configure", "Configure a static IPv4 address for me." )
+        ]
+        
+        button, answer = d.menu(message, choices=choices)
+        
+        check_cancel(button)
+        
+        if answer == "Configure":
+            return True
+        else:
+            return False
+        #end else:
+        
+    else:
+        # If we are not running Raspbian then we leave static IP configuration up to the user. 
+        
+        # This logic is perhaps over-the-top, but as it's already writen...
+        # Determine if the IPv4 address is likely to be static so the user
+        # can make more of an informed choice.
+        
+        # There does not seem to be a decent way to tell whether or not an IPv4 address is static.
+        # We will look in the file /etc/network/interfaces for the phrases below and judge.
+        #   'iface <interface name> inet static'
+        #   'iface <interface name> inet dhcp'
+        # Yes this could fail for many reasons including use of /etc/network/interfaces, so we won't
+        # make hard decisions based on this.
+        
+        ipv4_address_type = 'unknown'
+        
+        static_search_string    = 'iface {0} inet static'.format(interface)
+        dynamic_search_string   = 'iface {0} inet dhcp'.format(interface)
+        
+        with open('/etc/network/interfaces', 'r') as f:
+            interfaces_file = f.read()
+        #end with open('/etc/network/interfaces', 'r') as f:
+        
+        if static_search_string in interfaces_file:
+            ipv4_address_type = 'static'
+        elif dynamic_search_string in interfaces_file:
+            ipv4_address_type = 'dynamic'
+        #end elif dynamic_search_string in interfaces_file:
+        
+        message = ""
+        
+        message += "Again, pyhole requires a static IPv4 address.\n\n"
+        
+        if ipv4_address_type == 'static':
+            message += "It looks like your IPv4 address {0} on interface {1} is already static, which is good.  (This may be incorrect though.)\n\n".format(ipv4_address, interface)
+        elif ipv4_address_type == 'dynamic':
+            message += "It looks like your IPv4 address {0} on interface {1} is dynamic.  (This may be incorrect though.)  You need to have a static IP.  Please chooce Cancel and reconfigure a static IPv4 address.\n\n".format(ipv4_address, interface)
+        else:
+            message += "We're unable to tell whether your address {0} on interface {1} is dynamic or static.  You need to have a static IP.  If you do not believe you have set one, please chooce Cancel and reconfigure a static IPv4 address.\n\n".format(ipv4_address, interface)
+        #end else:
+                
+        button, answer = okcancel(message)
+        
+        return False
+        
+#end def choose_ipv4_reconfigure(interface : str, ipv4_interface):
+
+def choose_ipv4_new_static(interface: str, ipv4_interface):
     """Allow the user to choose their desired static IPv4 settings."""
     gateway = netifaces.gateways()['default'][netifaces.AF_INET]
     
     elements = [
-        ("address", 2, 2, ipv4_address['addr']   , 2, 15, 25, 25),
-        ("netmask", 4, 2, ipv4_address['netmask'], 4, 15, 25, 25),
-        ("gateway", 6, 2, gateway[0]             , 6, 15, 25, 25)
+        ("address", 2, 2, str(ipv4_interface.ip)        , 2, 15, 25, 25),
+        ("netmask", 4, 2, str(ipv4_interface.netmask)   , 4, 15, 25, 25),
+        ("gateway", 6, 2, gateway[0]                    , 6, 15, 25, 25)
     ]
     
     base_message = "Please enter your desired static IPv4 settings.\n\n"
@@ -474,17 +530,39 @@ def choose_ipv4_new_static(interface: str, ipv4_address):
         
     #end while validated == False:
     
-    return answer
+    # answer[0] address
+    # answer[1] netmask
+    # answer[2] gateway
     
-#end def choose_ipv4_new_static(interface: str, ipv4_address):
+    # Turn address and netmask into ipv4 interface object
+    addr_mask = "{0}/{1}".format( answer[0], answer[1] )
+    new_ipv4_interface = ipaddress.IPv4Interface(addr_mask)
+    
+    # Return ipv4 interface object and gateway
+    return new_ipv4_interface, answer[2]
+    
+#end def choose_ipv4_new_static(interface: str, ipv4_interface):
 
-def set_ipv4_static(interface : str, ipv4address):
+def set_ipv4_static_raspbian(interface : str, ipv4_interface, gateway):
     
-    # Are we using dhcpcd?
-    # Raspbian uses dhcpcd by default.  Debian doesn't.
-    pass
+    cidr = ipv4_interface.with_prefixlen
     
-#end def set_ipv4_static(interface : str, ipv4address):
+    # Generate our dhcpcd.conf content.
+    # Using the gateway as the DNS server is poor practice - it's not neccesarily a DNS server!
+    # But it is what the original Pi-hole did and not sure of the best alterative.
+    dhcpcd_content = """\
+    interface {0}
+    static ip_address={1}
+    static routers={2}
+    static domain_name_servers={3}
+    """.format(interface, cidr, gateway, gateway)
+    
+    # Append the content to the existing dhcpcd file.
+    with open('/etc/dhcpcd.conf', 'a') as f:
+        f.write(dhcpcd_content)
+    #end with
+    
+#end def set_ipv4_static_raspbian(interface : str, ipv4_interface, gateway):
 
 def choose_dns_custom_servers(quantity=2):
     """Allow the user to choose custom DNS servers."""
@@ -664,11 +742,11 @@ def create_htpasswd_file(password):
     return htpasswd_file
 #end def create_htpasswd_file(password):
 
-def install_webserver_config(web_server, interface : str, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file):
+def install_webserver_config(web_server, interface : str, ipv4_interface, web_root_pyhole, web_root_admin, htpasswd_file):
     
     # The strings we are replacing.
     replacements = {
-        '@IPv4addr@'        : ipv4_address['addr'],
+        '@IPv4addr@'        : str(ipv4_interface.ip),
         '@INT@'             : interface,
         '@web_root_pyhole@' : web_root_pyhole,
         '@web_root_admin@'  : web_root_admin,
@@ -789,11 +867,13 @@ else:
 ########################
 ### IP addresses
 
-ip_message = """As pyhole will be running a DNS server, it is essential that your internal IP address is static.  A dynamic internal IP is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)
+ip_message = """As pyhole will be running a DNS server, it is essential that its internal IP address is static.  A dynamic internal IP is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)
 
-pyhole can set a static IP address for you, though if you know how to set one yourself within Linux it is recommended you configure this outside of pyhole.
+If you are running pyhole on Raspbian and have not yet modified /etc/dhcpcd.conf or /etc/network/interfaces, pyhole can set a static IPv4 address for you (though if you know how to set one manually it is recommended you configure this outside of pyhole).
 
-Furthermore, if you are already running another web server, it is strongly recommended to configure a SECOND static IP address for pyhole.  This is outside the scope of pyhole-config.
+In all other cases, if you have not already configured a static IPv4 address you should choose Cancel now and rerun pyhole-config after you have configured a static address.  If you wish to use IPv6 then similarly you must have already configured a static IPv6 address.
+
+Furthermore, if you are already running another web server, it is strongly recommended to configure a SECOND static IP address for pyhole.  If you have configured multiple IP addresses then you will be able to choose which one you use for pyhole.
 
 (Note that your external IP does not matter - it can be static, dynamic, whatever.)
 """
@@ -809,18 +889,18 @@ use_ipv4 = 'IPv4' in protocols
 use_ipv6 = 'IPv6' in protocols
 
 if use_ipv4:
-    ipv4_address = choose_ipv4_address(interface)
-    ipv4_reconfigure = choose_ipv4_reconfigure(interface, ipv4_address)
+    ipv4_interface = choose_ipv4_address(interface)
+    ipv4_reconfigure = choose_ipv4_reconfigure(interface, ipv4_interface)
     
-    if ipv4_reconfigure == "Configure":
-        addr, netmask, gateway = choose_ipv4_new_static(interface, ipv4_address)
-        # IPv4 address configuration goes here
-    #end if ipv4_reconfigure == "Configure":
-#end if 'IPv4' in protocols:
+    if ipv4_reconfigure:
+        new_ipv4_interface, gateway = choose_ipv4_new_static(interface, ipv4_interface)
+        ipv4_interface = new_ipv4_interface
+    #end if ipv4_reconfigure:
+#end if use_ipv4:
 
 if use_ipv6:
-    ipv6_address = choose_ipv6_address(interface)
-#end if 'IPv6' in protocols:
+    ipv6_interface = choose_ipv6_address(interface)
+#end if use_ipv6:
 
 ########################
 ### DNS Servers
@@ -846,7 +926,8 @@ pyhole.config['Network']                        = {}
 pyhole.config['Network']['interface']           = interface
 pyhole.config['Network']['use_ipv4']            = str(use_ipv4)
 pyhole.config['Network']['use_ipv6']            = str(use_ipv6)
-pyhole.config['Network']['ipv4_addr']           = ipv4_address['addr']
+if use_ipv4: pyhole.config['Network']['ipv4_addr']  = str(ipv4_interface.ip)
+if use_ipv6: pyhole.config['Network']['ipv6_addr']  = str(ipv6_interface.ip)
 
 pyhole.config['WebServer']                      = {}
 pyhole.config['WebServer']['web_server']        = web_server
@@ -854,6 +935,11 @@ pyhole.config['WebServer']['web_root_pyhole']   = web_root_pyhole
 pyhole.config['WebServer']['web_root_admin']    = web_root_admin
 
 pyhole.write_config()
+
+# Set static IP if required.
+if ipv4_reconfigure:
+    set_ipv4_static_raspbian(interface, ipv4_interface, gateway)
+#end if
 
 # Create pyhole user and set permissions.
 
@@ -867,7 +953,7 @@ create_pyhole_log_file()
 set_sudoers_file_permissions()
 htpasswd_file = create_htpasswd_file(web_password)
 
-install_webserver_config(web_server, interface, ipv4_address, web_root_pyhole, web_root_admin, htpasswd_file)
+install_webserver_config(web_server, interface, ipv4_interface, web_root_pyhole, web_root_admin, htpasswd_file)
 install_webserver(web_root_pyhole, web_root_admin)
 
 # Invoke pyhole-gravity
