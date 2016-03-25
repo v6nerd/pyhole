@@ -38,7 +38,7 @@ Debatably unsafe `curl https://example.com/install.sh | sudo bash` one-line inst
 
 Coming eventually...
 
-# Known issues
+# Known issues and limitations
 
 Issues in **bold** are planned to be fixed.
 
@@ -47,15 +47,14 @@ Issues in **bold** are planned to be fixed.
 - Heavily tied into Debian; won't work on a distro without apt.
 - Uses sudo, againt best practices.
 - No package in apt repository.
-- Can't configure a static IP on Debian.  (Can on Raspbian which uses dhcpcd for static IP configuration).
 - **Can't be used together with an existing lighttpd server.**
 - **No nginx support.**
 
 ## Regressions from Pi-hole
 
+- **Uninstalling with dpkg does not yet perform a 100% removal.**
 - The admin interface password is stored as an MD5 hash, as lighttpd's mod_auth requires htpasswd files use MD5.
 - Some options missing, such as --quiet switches.
-- **Uninstalling with dpkg does not yet perform a 100% removal.**
 - No spinner `-\|/-`
 - Very little space-related output.
 - Unoriginal and uninspired name.
