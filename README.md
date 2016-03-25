@@ -63,7 +63,7 @@ Issues in **bold** are planned to be fixed.
 # Developer notes
 
 - The install process is now split into (building/)installing the deb package, and running pyhole-config to interactively configure.
-- There does not seem to be a good declarative way to set an IP address in Linux, and distros differ heavily in this regard (even Raspbian vs Debian).  Rather than risk ruining a system, users are ONLY offered to have a static IP configured for them if (a) They are running Raspbian Jessie, AND (b) /etc/network/interfaces is in its default state.  They will also be warned heavily.
+- There does not seem to be a good declarative way to set an IP address in Linux, and distros differ heavily in this regard (even Raspbian vs Debian).  Rather than risk ruining a system, users are ONLY offered to have a static IP configured for them if they are running Raspbian.  Those on other distros / platforms are more likely to be advanced users who can configure a static IP or figure out how.
 - Significant code is offloaded into the pyhole Python module and imported into each script, making code reuse far easier.
 - gravity.list is now named gravity.hosts to distinguish from downloaded lists.
 - Blacklisting and whitelisting have been overhauled and are greatly simplified.
