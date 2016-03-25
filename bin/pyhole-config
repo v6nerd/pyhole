@@ -236,7 +236,7 @@ def choose_web_roots():
 def choose_webserver_password():
     """Allow the user to choose a password for the web interface"""
     
-    base_message1 = """When accessing the Pi-hole admin interface, you will need to log on with the username 'pyhole' and a password of your choosing.  \n\nPlease enter a password to secure your pyhole web interface."""
+    base_message1 = """When accessing the pyhole admin interface, you will need to log on with the username 'pyhole' and a password of your choosing.  \n\nPlease enter a password to secure your pyhole web interface."""
     
     message1 = base_message1
     
@@ -736,7 +736,7 @@ def create_pyhole_log_file():
 
 def create_htpasswd_file(password):
     htpasswd_file  = os.path.join(pyhole.config_dir, 'htpasswd')
-    htpasswd_cmd = 'htpasswd -cb "{0}" pi-hole "{1}"'.format(htpasswd_file, password)
+    htpasswd_cmd = 'htpasswd -cb "{0}" pyhole "{1}"'.format(htpasswd_file, password)
     os.system( htpasswd_cmd )
     
     return htpasswd_file
@@ -854,7 +854,7 @@ web_server = choose_web_server()
 web_root_pyhole, web_root_admin = choose_web_roots()
 
 if web_server == 'Manual':
-    password_message = """The pyhole admin interface needs to be protected from unauthorised access.  You have chosen for Pi-Hole to install to a manually configured web server, so please make sure to configure authentication, for example with a username and password."""
+    password_message = """The pyhole admin interface needs to be protected from unauthorised access.  You have chosen for pyhole to install to a manually configured web server, so please make sure to configure authentication, for example with a username and password."""
     
     okcancel(password_message)
     
