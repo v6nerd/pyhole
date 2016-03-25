@@ -111,7 +111,7 @@ def services_changestate(web_server = None, stop = False, start = False, reload 
         if systemctl_cmd == "reload": systemctl_cmd = "restart"
         os.system("systemctl {0} lighttpd".format(systemctl_cmd) )
     elif web_server == "apache":
-        os.system("systemctl {0} apache".format(systemctl_cmd) )
+        os.system("systemctl {0} apache2".format(systemctl_cmd) )
     elif web_server == "Manual":
         pass
     #end elif
