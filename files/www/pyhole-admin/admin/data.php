@@ -141,7 +141,7 @@
     function readInBlockList() {
         global $domains;
         return count($domains) > 1 ? $domains :
-            file("/var/lib/pyhole/gravity.list");
+            file("/var/lib/pyhole/gravity.hosts");
     }
     function readInLog() {
         global $log;
@@ -230,7 +230,7 @@
     }
 
     function findAds($var) {
-        return strpos($var, "gravity.list") !== false;
+        return strpos($var, "gravity.hosts") !== false;
     }
 
     function findForwards($var) {
