@@ -137,13 +137,17 @@ def check_configured():
 ipv4_addr = None
 ipv6_addr = None
 
-if config['Network'].get('use_ipv4') == 'True':
-    ipv4_addr = config['Network']['ipv4_addr']
-#end if
+if 'Network' in config.sections():
 
-if config['Network'].get('use_ipv6') == 'True':
-    ipv6_addr = config['Network']['ipv6_addr']
-#end if
+    if config['Network'].get('use_ipv4') == 'True':
+        ipv4_addr = config['Network']['ipv4_addr']
+    #end if
+    
+    if config['Network'].get('use_ipv6') == 'True':
+        ipv6_addr = config['Network']['ipv6_addr']
+    #end if
+    
+#end if 'Network' in config.sections():
 
 ########################
 ###       Sudo       ###
