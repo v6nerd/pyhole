@@ -1001,4 +1001,20 @@ pyhole.pyhole_gravity()
 print("::: Restarting services...")
 pyhole.services_changestate(web_server, start = True)
 
-d.msgbox("pyhole has completed configuration!")
+final_message = "Configuration complete!\n\nConfigure your devices to use the Pi-hole as their DNS server using:"
+
+if use_ipv4:
+    final_message += "IPv4 Address: "
+    final_message += str(ipv4_interface.ip)
+    final_message += "\n"
+#end if
+
+if use_ipv6:
+    final_message += "IPv6 Address: "
+    final_message += str(ipv6_interface.ip)
+    final_message += "\n"
+#end if
+
+final_message += """\nIf you set a new IP address, you should reboot this server."""
+
+d.msgbox(final_message)
