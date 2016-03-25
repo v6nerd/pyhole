@@ -965,7 +965,9 @@ pyhole.config['WebServer']['web_server']        = web_server
 pyhole.config['WebServer']['web_root_pyhole']   = web_root_pyhole
 pyhole.config['WebServer']['web_root_admin']    = web_root_admin
 
+# Write and then re-read the config file.
 pyhole.write_config()
+pyhole.read_config()
 
 write_pyhole_admin_php_conf()
 
@@ -1001,7 +1003,7 @@ pyhole.pyhole_gravity()
 print("::: Restarting services...")
 pyhole.services_changestate(web_server, start = True)
 
-final_message = "Configuration complete!\n\nConfigure your devices to use the Pi-hole as their DNS server using:\n\n"
+final_message = "Configuration complete!\n\nConfigure your devices to use the pyhole as their DNS server using:\n\n"
 
 if use_ipv4:
     final_message += "IPv4 Address: "

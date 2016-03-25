@@ -122,16 +122,39 @@ def services_changestate(web_server = None, stop = False, start = False, reload 
 ###     Conf file    ###
 ########################
 
+
+
 def read_config():
     """Read the pyhole config from file."""
     global config
     global conf_file_path
+    global ipv4_addr
+    global ipv6_addr
     
     # Reinitialise the config object.
     config = configparser.ConfigParser()
     
     # Note: Reading the config does not seem to fail if it does not exist.
     config.read(conf_file_path)
+    
+    # Set handy global variables from the config file
+    
+    # IP Addresses:
+    ipv4_addr = None
+    ipv6_addr = None
+    
+    if 'Network' in config.sections():
+
+        if config['Network'].get('use_ipv4') == 'True':
+            ipv4_addr = config['Network']['ipv4_addr']
+        #end if
+        
+        if config['Network'].get('use_ipv6') == 'True':
+            ipv6_addr = config['Network']['ipv6_addr']
+        #end if
+        
+    #end if 'Network' in config.sections():
+    
 #end def read_config():
 
 def write_config():
@@ -157,26 +180,6 @@ def check_configured():
         sys.exit(1)
     #end else:
 # def check_configured():
-
-########################
-###      Network     ###
-########################
-
-# Read our IP details from our config file.
-ipv4_addr = None
-ipv6_addr = None
-
-if 'Network' in config.sections():
-
-    if config['Network'].get('use_ipv4') == 'True':
-        ipv4_addr = config['Network']['ipv4_addr']
-    #end if
-    
-    if config['Network'].get('use_ipv6') == 'True':
-        ipv6_addr = config['Network']['ipv6_addr']
-    #end if
-    
-#end if 'Network' in config.sections():
 
 ########################
 ###       Sudo       ###
