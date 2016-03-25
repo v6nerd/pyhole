@@ -711,7 +711,7 @@ def write_pyhole_admin_php_conf():
     
     php_conf_content = """\
     <?php
-        $protocolfactor = {0};\n"
+        $protocolfactor = {0};\n
     ?>
     """.format(protocolfactor)
     
