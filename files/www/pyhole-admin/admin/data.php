@@ -1,7 +1,15 @@
 <?php
     $domains = Array();
     $log = Array();
-    // Includes the variable $protocolfactor
+    
+    /* $protocolfactor is used to divide the number of entries in gravity_hosts by.
+       If IPv4 AND IPv6 are enabled then there will be two entries for each domain - so divide by 2
+       Otherwise there will be one entry for each domain - so divide by 1
+    */
+    
+    // Define a default value in case we fail to include.
+    $protocolfactor = 1;
+    // Include the variable $protocolfactor
     include('/etc/pyhole/pyhole-admin.php');
 
     /*******   Public Members ********/
