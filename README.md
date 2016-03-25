@@ -13,6 +13,30 @@ It's not ready yet.  Don't bother downloading, you'll be very disappointed ;-)
 - Password protect the admin web interface at the web server level.
 - Better adherence to general Linux file location and permission best practices.
 
+# Installation
+
+## Debatably unsafe `curl | sudo bash` easy installer.
+
+Coming soon...
+
+## Manual install from GitHub
+
+1. Ensure sudo is installed by running the following as root:
+    - `apt-get install sudo`
+2. Install either lighttpd or apache.  If unsure install lighttpd.
+    - `sudo apt-get install lighttpd` , OR
+    - `sudo apt-get install apache2 libapache2-mod-php5`
+3.  Clone this Git repository
+    - `git clone "https://github.com/pyhole/pyhole.git"`
+4.  Run pyhole-installdeb.sh which will build the deb, install dependencies, and install the deb with dpkg.
+    - `sudo ./pyhole/DEBIAN/pyhole-installdeb.sh`
+5.  Run pyhole-config, which will guide you through configuring pyhole.
+    - `pyhole-config`
+
+## Manual install from .deb release
+
+Coming eventually...
+
 # Known issues
 
 Issues in **bold** are planned to be fixed.
