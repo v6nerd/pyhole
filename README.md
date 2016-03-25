@@ -44,11 +44,11 @@ Issues in **bold** are planned to be fixed.
 
 ## In common with the original Pi-hole
 
+- **Can't be used together with an existing lighttpd server.**  (Can with apache.)
+- **No nginx support.**
 - Heavily tied into Debian; won't work on a distro without apt.
 - Uses sudo, againt best practices.
 - No package in apt repository.
-- **Can't be used together with an existing lighttpd server.**
-- **No nginx support.**
 
 ## Regressions from Pi-hole
 
