@@ -1015,6 +1015,15 @@ if use_ipv6:
     final_message += "\n"
 #end if
 
-final_message += """\nIf you set a new IP address, you should reboot this server."""
+final_message += "\n"
+
+if use_ipv4:
+    final_message += "The pyhole admin interface can be accessed at:\n\n"
+    final_message += "http://"
+    final_message += str(ipv4_interface.ip)
+    final_message += ":8080/admin/\n"
+#end if
+
+final_message += "\nIf you set a new IP address, you should reboot this server."
 
 d.msgbox(final_message)
