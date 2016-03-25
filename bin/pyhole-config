@@ -943,6 +943,7 @@ pyhole.config['WebServer']['web_root_admin']    = web_root_admin
 pyhole.write_config()
 
 # Stop dnsmasq and the web server.
+print("::: Stopping services...")
 pyhole.services_changestate(web_server, stop = True)
 
 # Set static IP if required.
