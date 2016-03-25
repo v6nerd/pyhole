@@ -474,7 +474,12 @@ def pyhole_gravity():
     p_eyeoftheneedle = base_path + ".4.eyeoftheneedle"  # Unused - just like original gravity.sh
 
     print(":::")
-    print("::: Large gravitational pull detected at {0} {1}.".format(ipv4_addr, config['Network'].get('interface') ) )
+    if use_ipv4:
+        print("::: Large gravitational pull detected at {0} {1}.".format(ipv4_addr, config['Network'].get('interface') ) )
+    #end if
+    if use_ipv6:
+        print("::: Large gravitational pull detected at {0} {1}.".format(ipv6_addr, config['Network'].get('interface') ) )
+    #end if
     print(":::")
 
     print("::: Neutrino emissions detected...")
