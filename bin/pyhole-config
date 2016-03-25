@@ -696,6 +696,27 @@ def choose_dns_provider():
 ##  Config Functions  ##
 ########################
 
+def write_pyhole_admin_php_conf():
+    """Write variables to a php file for pyhole-admin to include."""
+    php_conf_file = os.path.join(pyhole.config_dir, "pyhole-admin.php")
+    
+    # pyhole-admin will use protocolfactor to divide the number of entries in gravity_hosts by
+    # IPv4 AND IPv6 are enabled then there will be two entries for each domain - so divide by 2
+    # Otherwise there will be one entry for each domain - so divide by 1
+    if use_ipv4 and use_ipv6:
+        protocolfactor = 2
+    else:
+        protocolfactor = 1
+    #end else:
+    
+    php_conf_content = "$protocolfactor = {0};\n".format(protocolfactor)
+    
+    with open (php_conf_file, 'wt') as f:
+        f.write(php_conf_content)
+    #end with
+    
+#end def write_pyhole_admin_php_conf():
+
 def install_dnsmasq_config(dns_provider, interface : str):
     """Reads the template dnsmasq conf file, makes replacements, and outputs to the final location."""
     
@@ -941,6 +962,8 @@ pyhole.config['WebServer']['web_root_pyhole']   = web_root_pyhole
 pyhole.config['WebServer']['web_root_admin']    = web_root_admin
 
 pyhole.write_config()
+
+write_pyhole_admin_php_conf()
 
 # Stop dnsmasq and the web server.
 print("::: Stopping services...")

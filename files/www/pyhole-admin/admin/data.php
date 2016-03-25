@@ -1,14 +1,15 @@
 <?php
     $domains = Array();
     $log = Array();
-    $ipv6 = file_exists("/etc/pyhole/.useIPv6");
+    // Includes the variable $protocolfactor
+    include('/etc/pyhole/pyhole-admin.php');
 
     /*******   Public Members ********/
     function getSummaryData() {
-        global $ipv6;
+        global $protocolfactor;
         $domains = readInBlockList();
         $log = readInLog();
-        $domains_being_blocked = count($domains) / ($ipv6 ? 2 : 1);
+        $domains_being_blocked = count($domains) / ($protocolfactor);
 
         $dns_queries_today = count(getDnsQueries($log));
 
