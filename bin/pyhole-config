@@ -942,6 +942,9 @@ pyhole.config['WebServer']['web_root_admin']    = web_root_admin
 
 pyhole.write_config()
 
+# Stop dnsmasq and the web server.
+pyhole.services_changestate(web_server, stop = True)
+
 # Set static IP if required.
 if ipv4_reconfigure:
     set_ipv4_static_raspbian(interface, ipv4_interface, gateway)
@@ -965,5 +968,9 @@ enable_webserver(web_server)
 
 # Invoke pyhole-gravity
 pyhole.pyhole_gravity()
+
+# Start dnsmasq and the web server
+print("::: Restarting services...")
+pyhole.services_changestate(web_server, start = True)
 
 d.msgbox("pyhole has completed configuration!")

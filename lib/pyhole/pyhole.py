@@ -89,6 +89,35 @@ def valid_port(port):
     #end except:
 #end def valid_port(port):
 
+def services_changestate(web_server = None, stop = False, start = False, reload = False, restart = False):
+    """Stop, start, reload or restart dnsmasq and the provided web server."""
+    
+    # Which systemctl command are we running?
+    if stop == True:         systemctl_cmd = "stop"
+    elif start == True:      systemctl_cmd = "start"
+    elif reload == True:     systemctl_cmd = "reload"
+    elif restart == True:    systemctl_cmd = "restart"
+    else:
+        print("You must set either stop, start, reload or restart to True")
+        raise
+    #end else:
+    
+    # Operate on dnsmasq
+    os.system("systemctl {0} dnsmasq".format(systemctl_cmd) )
+    
+    # Operate on the web server
+    if web_server == "lighttpd":
+        # lighttpd cannot be reloaded, so change to restart
+        if systemctl_cmd == "reload": systemctl_cmd = "restart"
+        os.system("systemctl {0} lighttpd".format(systemctl_cmd) )
+    elif web_server == "apache":
+        os.system("systemctl {0} apache".format(systemctl_cmd) )
+    elif web_server == "Manual":
+        pass
+    #end elif
+    
+#end def services_changestate(web_server = None, stop = False, start = False, reload = False, restart = False):
+
 ########################
 ###     Conf file    ###
 ########################
