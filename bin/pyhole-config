@@ -961,6 +961,7 @@ htpasswd_file = create_htpasswd_file(web_password)
 
 install_webserver_config(web_server, interface, ipv4_interface, web_root_pyhole, web_root_admin, htpasswd_file)
 install_webserver(web_root_pyhole, web_root_admin)
+enable_webserver(web_server)
 
 # Invoke pyhole-gravity
 pyhole.pyhole_gravity()
