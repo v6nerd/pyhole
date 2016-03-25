@@ -414,6 +414,10 @@ def gravity_resetpermissions():
     
     path = os.path.join(var_dir, "*")
     for file in glob.glob(path):
+        # If we are running as root then these commands should work fine.
+        # If not then they will fail, but in that case we are almost certainly
+        # running as pyhole, in which case the files will already have correct
+        # owner and group owner, so failure doesn't matter.
         try:
             shutil.chown(file, user = 'pyhole', group = 'pyhole')
         except:

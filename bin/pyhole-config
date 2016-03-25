@@ -926,8 +926,14 @@ pyhole.config['Network']                        = {}
 pyhole.config['Network']['interface']           = interface
 pyhole.config['Network']['use_ipv4']            = str(use_ipv4)
 pyhole.config['Network']['use_ipv6']            = str(use_ipv6)
-if use_ipv4: pyhole.config['Network']['ipv4_addr']  = str(ipv4_interface.ip)
-if use_ipv6: pyhole.config['Network']['ipv6_addr']  = str(ipv6_interface.ip)
+if use_ipv4:
+    pyhole.config['Network']['ipv4_addr']   = str(ipv4_interface.ip)
+    pyhole.ipv4_addr                        = str(ipv4_interface.ip)
+#end if
+if use_ipv6:
+    pyhole.config['Network']['ipv6_addr']   = str(ipv6_interface.ip)
+    pyhole.ipv6_addr                        = str(ipv6_interface.ip)
+#end if
 
 pyhole.config['WebServer']                      = {}
 pyhole.config['WebServer']['web_server']        = web_server
