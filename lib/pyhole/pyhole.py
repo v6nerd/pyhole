@@ -409,6 +409,19 @@ def gravity_blackbody( dir, source_files ):
     #end for
 #end def gravity_blackbody( dir, source_files )
 
+def gravity_resetpermissions():
+    """If we have been running as root, we may need to chown files in /var/lib/pyhole to pyhole:pyhole."""
+    
+    path = os.path.join(var_dir, "*")
+    for file in glob.glob(path):
+        try:
+            shutil.chown(file, user = 'pyhole', group = 'pyhole')
+        except:
+            pass
+        #end except:
+    #end for
+#end def gravity_resetpermission():
+
 def gravity_reload():
     """Reload all required services."""
     print(":::")
@@ -475,7 +488,10 @@ def pyhole_gravity():
     # Run pyhole_whitelist to comment out any domains in whitelist.txt in gravity.hosts.
     print("::: Running pyhole-whitelist to update gravity.hosts file....")
     pyhole_whitelist( domains = None, delete = False, force = True, no_reload = True )
-
+    
+    # Try to ensure all files in /var/lib/pyhole are chowned pyhole:pyhole
+    gravity_resetpermissions()
+    
     # Reload dnsmasq settings.
     gravity_reload()
 
@@ -705,6 +721,11 @@ def pyhole_blacklist(domains = None, delete = False, force = False, no_reload = 
             gravity_reload()
         #end if
     #end if
+    
+    # Try to ensure all files in /var/lib/pyhole are chowned pyhole:pyhole
+    gravity_resetpermissions()
+    
+    
 #end def pyhole_blacklist(domains = None, delete = False, force = False, no_reload = False):
 
 def pyhole_whitelist(domains = None, delete = False, force = False, no_reload = False):
@@ -735,5 +756,8 @@ def pyhole_whitelist(domains = None, delete = False, force = False, no_reload = 
             gravity_reload()
         #end if
     #end if
-
+    
+    # Try to ensure all files in /var/lib/pyhole are chowned pyhole:pyhole
+    gravity_resetpermissions()
+    
 #end def pyhole_whitelist(domains = None, delete = False, force = False, no_reload = False):
