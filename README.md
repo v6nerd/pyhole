@@ -54,6 +54,7 @@ Issues in **bold** are planned to be fixed.
 
 - **No one-line installer at present.**
 - **Uninstalling with dpkg does not yet perform a 100% removal.**
+- Unlike whiptail, dialog does not draw correctly with PuTTY when using UTF-8 in its default form.  Not exactly a pyhole issue; see <http://www.novell.com/support/kb/doc.php?id=7015165> for solutions.
 - The admin interface password is stored as an MD5 hash, as lighttpd's mod_auth requires htpasswd files use MD5.
 - Some options missing, such as --quiet switches.
 - No spinner `-\|/-`
