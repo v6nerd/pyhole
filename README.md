@@ -1,11 +1,12 @@
-# Not yet...
+# Pyhole
 
-It's not ready yet.  Don't bother downloading, you'll be very disappointed ;-)
+A clone of the popular Pi-hole DNS ad-blocker.
 
 # Features
 
 - Pi-hole rewritten in Python from the ground up.
 - Tested on Raspbian and Debian.  Should work on any Debian-based distro, e.g. Ubuntu.
+- Tested with Python 3.4.  Should work with Python 3.4 and newer.
 - Builds into a .deb package, which can be more easily and cleanly installed, upgraded, and removed with dpkg.
 - Support for systems with multiple IPv4 addresses on an interface (which is strongly recommended if running another web server on the same server).
 - Support for configuring multiple web servers - currently lighttpd and apache.  Using another web server?  So long as you manually configure it correctly, pyhole can work with that too.
@@ -15,25 +16,25 @@ It's not ready yet.  Don't bother downloading, you'll be very disappointed ;-)
 
 # Installation
 
-## Debatably unsafe `curl | sudo bash` easy installer.
+## One-line installer
 
-Coming soon...
+Debatably unsafe `curl https://example.com/install.sh | sudo bash` one-line installer is coming soon...
 
 ## Manual install from GitHub
 
 1. Ensure sudo is installed by running the following as root:
     - `apt-get install sudo`
-2. Install either lighttpd or apache.  If unsure install lighttpd.
+2. Install a web server of your choise - lighttpd or apache.  If unsure install lighttpd.  (Advanced users can use any web server.)
     - `sudo apt-get install lighttpd` , OR
     - `sudo apt-get install apache2 libapache2-mod-php5`
-3.  Clone this Git repository
+3.  Clone this Git repository.
     - `git clone "https://github.com/pyhole/pyhole.git"`
 4.  Run pyhole-installdeb.sh which will build the deb, install dependencies, and install the deb with dpkg.
     - `sudo ./pyhole/DEBIAN/pyhole-installdeb.sh`
 5.  Run pyhole-config, which will guide you through configuring pyhole.
     - `pyhole-config`
 
-## Manual install from .deb release
+## Manual install from .deb
 
 Coming eventually...
 
@@ -52,11 +53,11 @@ Issues in **bold** are planned to be fixed.
 
 ## Regressions from Pi-hole
 
-- **No one-line installer (`curl -L install.pi-hole.net | bash`).  Dependencies need to be installed manually with apt.**
 - The admin interface password is stored as an MD5 hash, as lighttpd's mod_auth requires htpasswd files use MD5.
 - Some options missing, such as --quiet switches.
+- **Uninstalling with dpkg does not yet perform a 100% removal.**
 - No spinner `-\|/-`
-- **Very little space-related output.**
+- Very little space-related output.
 - Unoriginal and uninspired name.
 
 # Developer notes
