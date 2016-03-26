@@ -132,7 +132,7 @@ def package_install(package : str):
         raise
     #end if apt_cache[package].is_installed:
     
-    apt_cache[package].mark_install
+    apt_cache[package].mark_install()
     apt_cache.commit()
     
     # Reload the changes to apt-cache
@@ -731,6 +731,17 @@ def choose_dns_provider():
 ##  Config Functions  ##
 ########################
 
+def install_dependencies(web_server):
+    """pyhole's deb package specifies almost all of the dependencies required.  However a very small number are conditional dependencies, so we will install them here."""
+    
+    if web_server == 'apache':
+        if not package_is_installed('libapache2-mod-php5'):
+            package_install('libapache2-mod-php5')
+        #end if
+    #end if
+    
+#end def install_dependencies(web_server):
+
 def write_pyhole_admin_php_conf():
     """Write variables to a php file for pyhole-admin to include."""
     php_conf_file = os.path.join(pyhole.config_dir, "pyhole-admin.php")
@@ -1043,29 +1054,41 @@ write_pyhole_admin_php_conf()
 print("::: Stopping services...")
 pyhole.services_changestate(web_server, stop = True)
 
+# Standard dependencies are enumerated in the .deb package - this config
+# shouldn't be running if they are not already installed.
+# We check for and install conditional dependencies
+# e.g. libapache2-mod-php5 if using apache
+print("::: Installing any missing conditional dependencies...")
+install_dependencies(web_server)
+
 # Set static IP if required.
 if ipv4_reconfigure:
     set_ipv4_static_raspbian(interface, ipv4_interface, gateway)
 #end if
 
 # Create pyhole user and set permissions.
-
+print("::: Creating pyhole user...")
 create_pyhole_user()
+print("::: Setting folder permissions...")
 set_dir_permissions()
 
 # Create configs & set permissions.
 
+print("::: Installing config files...")
 install_dnsmasq_config(dns_provider, interface)
 create_pyhole_log_file()
 set_sudoers_file_permissions()
+print("::: Setting admin interface password...")
 htpasswd_file = create_htpasswd_file(web_password)
 
 # Web server
 
+print("::: Installing web server...")
 install_webserver_config(web_server, interface, ipv4_interface, web_root_pyhole, web_root_admin, htpasswd_file)
 install_webserver_files(web_root_pyhole, web_root_admin)
 
 # Invoke pyhole-gravity
+print("::: Invoking gravity...")
 pyhole.pyhole_gravity()
 
 # Start dnsmasq and the web server
