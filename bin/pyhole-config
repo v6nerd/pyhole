@@ -160,6 +160,22 @@ def copy_and_replace(src, dst, replacements):
     #end with
 #end def copy_and_replace(src, dst, replacements):
 
+def is_raspbian():
+    """Return True if running on Raspbian, false otherwise."""
+    try:
+        # Get the distro - e.g. Raspbian, Debian
+        distro = subprocess.check_output( ['lsb_release',  '-si'] ).decode('utf-8').strip()
+        if distro == "Raspbian":
+            return True
+        else:
+            return False
+        #end else:
+    except:
+        return False
+    #end except:
+    
+#end def check_raspbian():
+
 ########################
 ##  Gather Functions  ##
 ########################
@@ -169,6 +185,9 @@ def show_welcome_message():
     message = "This program will configure your pyhole.\n\nYou can choose cancel at any time during config and no changes will have been made to your system."
     okcancel(message)
 #end def show_welcome_message:
+
+########################
+### Web Server
 
 def choose_web_server():
     """Allow the user to choose the web server they want."""
@@ -267,6 +286,9 @@ def choose_webserver_password():
     
     return answer1
 #end def choose_webserver_password():
+
+########################
+### Networking
 
 def choose_interface():
     """Allow the user to choose their network interface."""
@@ -393,22 +415,6 @@ def choose_ipv6_address(interface: str):
     return ipaddress.IPv6Interface(addr_mask)
     
 #def choose_ipv6_address():
-
-def is_raspbian():
-    """Return True if running on Raspbian, false otherwise."""
-    try:
-        # Get the distro - e.g. Raspbian, Debian
-        distro = subprocess.check_output( ['lsb_release',  '-si'] ).decode('utf-8').strip()
-        if distro == "Raspbian":
-            return True
-        else:
-            return False
-        #end else:
-    except:
-        return False
-    #end except:
-    
-#end def check_raspbian():
 
 def choose_ipv4_reconfigure(interface : str, ipv4_interface):
     """Choose whether to reconfigure the ipv4 address.  Return True for reconfigure, False to keep."""
@@ -563,6 +569,9 @@ def set_ipv4_static_raspbian(interface : str, ipv4_interface, gateway):
     #end with
     
 #end def set_ipv4_static_raspbian(interface : str, ipv4_interface, gateway):
+
+########################
+### DNS Servers
 
 def choose_dns_custom_servers(quantity=2):
     """Allow the user to choose custom DNS servers."""
@@ -942,6 +951,9 @@ okcancel("pyhole is now ready to be configured from your answers to the previous
 
 # Start configuring!
 
+########################
+### Conf files
+
 # Write pyhole conf file.
 
 pyhole.config['DEFAULT']                        = {}
@@ -969,7 +981,11 @@ pyhole.config['WebServer']['web_root_admin']    = web_root_admin
 pyhole.write_config()
 pyhole.read_config()
 
+# Write pyhole-admin.php conf file
 write_pyhole_admin_php_conf()
+
+########################
+### Main configuration
 
 # Stop dnsmasq and the web server.
 print("::: Stopping services...")
@@ -992,6 +1008,8 @@ create_pyhole_log_file()
 set_sudoers_file_permissions()
 htpasswd_file = create_htpasswd_file(web_password)
 
+# Web server
+
 install_webserver_config(web_server, interface, ipv4_interface, web_root_pyhole, web_root_admin, htpasswd_file)
 install_webserver(web_root_pyhole, web_root_admin)
 enable_webserver(web_server)
@@ -1002,6 +1020,9 @@ pyhole.pyhole_gravity()
 # Start dnsmasq and the web server
 print("::: Restarting services...")
 pyhole.services_changestate(web_server, start = True)
+
+########################
+### Final Message
 
 final_message = "Configuration complete!\n\nConfigure your devices to use the pyhole as their DNS server using:\n\n"
 
