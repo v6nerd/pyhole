@@ -1,6 +1,14 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-/usr/bin/pyhole-purge
+# Uncomment for debugging
+# echo "prerm invoked: $0 $@"
 
-rm -rf "/usr/lib/python3.4/pyhole/__pycache__/"
+if [[ $1 == "remove"]]
+then
+    /usr/bin/pyhole-purge
+    rm -rf "/usr/lib/python3.4/pyhole/__pycache__/"
+elif [[ $1 == "upgrade"]]
+    # Do nothing
+    :
+fi
 
