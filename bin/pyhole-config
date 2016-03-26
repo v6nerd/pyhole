@@ -817,23 +817,33 @@ def install_webserver_config(web_server, interface : str, ipv4_interface, web_ro
     }
     
     if web_server == "lighttpd":
-        lighttpd_conf_in = os.path.join(pyhole.share_dir, 'conf/lighttpd/lighttpd.conf')
-        lighttpd_conf_out = '/etc/lighttpd/lighttpd.conf'
+        # Copy the one "virtual host" file 01-pyhole.conf for both pyhole and pyhole-admin websites.
+        lighttpd_pyhole_in = os.path.join(pyhole.share_dir, 'conf/lighttpd/01-pyhole.conf')
+        lighttpd_pyhole_out = '/etc/lighttpd/conf-available/01-pyhole.conf'
         
-        # Backup the original file.
-        lighttpd_conf_out_bak = lighttpd_conf_out + ".orig"
-        shutil.move(lighttpd_conf_out, lighttpd_conf_out_bak)
+        copy_and_replace(lighttpd_pyhole_in, lighttpd_pyhole_out, replacements)
         
-        copy_and_replace(lighttpd_conf_in, lighttpd_conf_out, replacements)
-        
+        # Enable modules and the websites
         os.system("lighty-enable-mod fastcgi fastcgi-php")
+        os.system("lighty-enable-mod pyhole")
         
+        # "Disable" the default lighttpd website if this was set
+        # We do this this just by copying a custom config that is essentially
+        # the default lighttpd.conf but with port 81 instead of 80.
         if disable_default_website:
-            # To be implemented
-            pass
+            lighttpd_conf_in = os.path.join(pyhole.share_dir, 'conf/lighttpd/lighttpd.conf')
+            lighttpd_conf_out = '/etc/lighttpd/lighttpd.conf'
+            
+            # Backup the original file.
+            lighttpd_conf_out_bak = lighttpd_conf_out + ".orig"
+            shutil.move(lighttpd_conf_out, lighttpd_conf_out_bak)
+            
+            copy_and_replace(lighttpd_conf_in, lighttpd_conf_out, replacements)
         #end if disable_default_website:
         
     elif web_server == "apache":
+        # Copy the two "virtual host" files; pyhole.conf and pyhole-admin.conf
+        
         apache_pyhole_in = os.path.join(pyhole.share_dir, 'conf/apache/pyhole.conf')
         apache_pyhole_out = '/etc/apache2/sites-available/pyhole.conf'
         
@@ -844,10 +854,12 @@ def install_webserver_config(web_server, interface : str, ipv4_interface, web_ro
         
         copy_and_replace(apache_admin_in, apache_admin_out, replacements)
         
+        # Enable modules and the websites
         os.system("a2enmod headers rewrite")
         os.system("a2ensite pyhole")
         os.system("a2ensite pyhole-admin")
         
+        # Disable the default apache website if this was set.
         if disable_default_website:
             os.system("a2dissite 000-default")
         #end if disable_default_website:
