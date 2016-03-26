@@ -30,8 +30,6 @@ from collections import namedtuple
 # http://pythondialog.sourceforge.net/doc/Dialog_class_overview.html
 # http://pythondialog.sourceforge.net/doc/widgets.html
 from dialog import Dialog
-# For parsing the config file
-import configparser
 # For managing apt packages
 # https://apt.alioth.debian.org/python-apt-doc/library/apt.cache.html
 # https://apt.alioth.debian.org/python-apt-doc/library/apt.package.html
