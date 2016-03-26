@@ -1,0 +1,6 @@
+#!/bin/sh
+
+/usr/bin/pyhole-purge
+
+rm -rf "/usr/lib/python3.4/pyhole/__pycache__/"
+
