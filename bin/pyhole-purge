@@ -33,7 +33,7 @@ web_root_pyhole = pyhole.config['WebServer']['web_root_pyhole']
 web_root_admin  = pyhole.config['WebServer']['web_root_admin']
 
 # Stop services.
-services_changestate(web_server, stop = True)
+pyhole.services_changestate(web_server, stop = True)
 
 if web_server == "lighttpd":
     # Disable the website.
@@ -59,4 +59,4 @@ shutil.rmtree(web_root_admin)
 shutil.rmtree(pyhole.var_dir)
 
 # Start services again.
-services_changestate(web_server, start = True)
+pyhole.services_changestate(web_server, start = True)
