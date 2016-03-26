@@ -32,6 +32,8 @@ import ipaddress
 import configparser
 # For finding out the current user.
 import getpass
+# For strtobool
+import distutils.util
 
 # Gravity
 
@@ -128,6 +130,7 @@ def read_config():
     """Read the pyhole config from file."""
     global config
     global conf_file_path
+    global configured
     global ipv4_addr
     global ipv6_addr
     
@@ -138,6 +141,9 @@ def read_config():
     config.read(conf_file_path)
     
     # Set handy global variables from the config file
+    
+    configured_string = config['DEFAULT'].get('pyhole_configured')
+    configured = distutils.util.strtobool(configured_string)
     
     # IP Addresses:
     ipv4_addr = None
@@ -173,7 +179,7 @@ read_config()
 
 def check_configured():
     """Checks if pyhole has been configured, and if not then exits."""
-    if config['Network'].get('pyhole_configured') == "True":
+    if configured:
         pass
     else:
         print("pyhole has not yet been configured.  Please configure pyhole by running pyhole-config.")

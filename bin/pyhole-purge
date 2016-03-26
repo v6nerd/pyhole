@@ -26,37 +26,72 @@ import shutil
 # Exit if not root.
 pyhole.require_root()
 
-# Easier variables.
-# TODO: Error handling when variables are blank.
-web_server      = pyhole.config['WebServer']['web_server']
-web_root_pyhole = pyhole.config['WebServer']['web_root_pyhole']
-web_root_admin  = pyhole.config['WebServer']['web_root_admin']
+########################
+##  Helper Functions  ##
+########################
 
-# Stop services.
-pyhole.services_changestate(web_server, stop = True)
+def attempt_rmtree(path = None):
+    """Try to delete the directory, but if it doesn't exist then no errors."""
+    if path:
+        try:
+            shutil.rmtree(path)
+        except FileNotFoundError:
+            pass
+        #end except
+    #end if
+#end def attempt_rmtree( path = None ):
 
-if web_server == "lighttpd":
-    # Disable the website.
-    os.system("lighty-disable-mod pyhole")
+########################
+###       Purge      ###
+########################
+
+if not pyhole.configured:
+    print("pyhole-purge: pyhole is not configured; nothing to purge.")
+else:
+    print("pyhole-purge: pyhole is configured.")
     
-    # Restore the original lighttpd.conf, overwriting our version.
-    lighttpd_conf_out = '/etc/lighttpd/lighttpd.conf'
-    lighttpd_conf_out_bak = lighttpd_conf_out + ".orig"
-    shutil.move(lighttpd_conf_out_bak, lighttpd_conf_out)
-elif web_server == "apache":
-    # Disable the websites.
-    os.system("a2dissite pyhole")
-    os.system("a2dissite pyhole-admin")
-elif web_server == "manual":
-    pass
-#end elif
-
-# Remove our website files.
-shutil.rmtree(web_root_pyhole)
-shutil.rmtree(web_root_admin)
-
-# Remove our lists.
-shutil.rmtree(pyhole.var_dir)
-
-# Start services again.
-pyhole.services_changestate(web_server, start = True)
+    # Even if this is a configured pyhole, we will still be careful.
+    # Get variables, with "None" as default values
+    
+    try:    web_server      = pyhole.config['WebServer']['web_server']
+    except: web_server      = None
+    
+    try:    web_root_pyhole = pyhole.config['WebServer']['web_root_pyhole']
+    except: web_root_pyhole = None
+    
+    try:    web_root_admin  = pyhole.config['WebServer']['web_root_admin']
+    except: web_root_admin  = None
+    
+    # Stop services.
+    # Note that services_changestate is happy to accept None as a web_server,
+    # in which case it only stops dnsmasq
+    pyhole.services_changestate(web_server, stop = True)
+    
+    # Web server specific actions.
+    if web_server == "lighttpd":
+        # Disable the website.
+        os.system("lighty-disable-mod pyhole")
+        
+        # Restore the original lighttpd.conf, overwriting our version.
+        lighttpd_conf_out = '/etc/lighttpd/lighttpd.conf'
+        lighttpd_conf_out_bak = lighttpd_conf_out + ".orig"
+        shutil.move(lighttpd_conf_out_bak, lighttpd_conf_out)
+    elif web_server == "apache":
+        # Disable the websites.
+        os.system("a2dissite pyhole")
+        os.system("a2dissite pyhole-admin")
+    elif web_server == "manual":
+        pass
+    #end elif
+    
+    # Remove our website files.
+    attempt_rmtree(web_root_pyhole)
+    attempt_rmtree(web_root_admin)
+    
+    # Remove our lists.
+    attempt_rmtree(pyhole.var_dir)
+    
+    # Start services again.
+    pyhole.services_changestate(web_server, start = True)
+    
+#end else
