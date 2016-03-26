@@ -142,8 +142,13 @@ def read_config():
     
     # Set handy global variables from the config file
     
+    # Whether or not pyhole is configured.
     configured_string = config['DEFAULT'].get('pyhole_configured')
-    configured = distutils.util.strtobool(configured_string)
+    if configured_string:
+        configured = distutils.util.strtobool(configured_string)
+    else:
+        configured = False
+    #end else:
     
     # IP Addresses:
     ipv4_addr = None
