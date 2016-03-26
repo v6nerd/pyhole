@@ -918,18 +918,25 @@ show_welcome_message()
 
 # Choose a web server and web root paths.
 web_server = choose_web_server()
-web_root_pyhole, web_root_admin = choose_web_roots()
+
 
 if web_server == 'Manual':
-    password_message = """The pyhole admin interface needs to be protected from unauthorised access.  You have chosen for pyhole to install to a manually configured web server, so please make sure to configure authentication, for example with a username and password."""
+    manual_message = "You have chosen for pyhole to install to a manually configured web server.  Please keep in mind this means you need to perform all web server configuration yourself, including:\n\n"
     
-    okcancel(password_message)
+    manual_message += "- Configuring your web server to use the correct ports and IP address for pyhole.\n"
+    manual_message += "- Ensuring the website is protected from unauthorised access, for example with a username or password.\n"
+    okcancel(manual_message)
+    
+    web_root_pyhole, web_root_admin = choose_web_roots()
     
     web_password_set = False
     disable_default_website = False
 else:
+    web_root_pyhole, web_root_admin = choose_web_roots()
+    
     web_password = choose_webserver_password()
     web_password_set = True
+    
     disable_default_website = choose_disable_default_website(web_server)
 #end else:
 
