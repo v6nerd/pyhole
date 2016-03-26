@@ -32,7 +32,7 @@ Debatably unsafe `curl https://example.com/install.sh | sudo bash` one-line inst
 4.  Run pyhole-installdeb.sh which will build the deb, install dependencies, and install the deb with dpkg.
     - `sudo ./pyhole/DEBIAN/pyhole-installdeb.sh`
 5.  Run pyhole-config, which will guide you through configuring pyhole.
-    - `pyhole-config`
+    - `sudo pyhole-config`
 
 ## Manual install from .deb
 
@@ -44,10 +44,9 @@ Issues in **bold** are planned to be fixed.
 
 ## In common with the original Pi-hole
 
-- **Can't be used together with an existing lighttpd server.**  (Can with apache.)
 - **No nginx support.**
 - Heavily tied into Debian; won't work on a distro without apt.
-- Uses sudo, againt best practices.
+- Uses sudo againt best practices.  Used to run certain scripts as pyhole user.
 - No package in apt repository.
 
 ## Regressions from Pi-hole
