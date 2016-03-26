@@ -3,11 +3,11 @@
 # Uncomment for debugging
 # echo "prerm invoked: $0 $@"
 
-if [[ $1 == "remove"]]
+if [[ $1 == "remove" ]]
 then
     /usr/bin/pyhole-purge
     rm -rf "/usr/lib/python3.4/pyhole/__pycache__/"
-elif [[ $1 == "upgrade"]]
+elif [[ $1 == "upgrade" ]]
 then
     # Do nothing
     :
