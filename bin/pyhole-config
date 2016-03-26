@@ -43,8 +43,8 @@ import ipaddress
 # For file operations including ownership
 import shutil
 
-# If not root, rerun as root with sudo.
-pyhole.sudo_root()
+# Exit if not root.
+pyhole.require_root()
 
 ########################
 ###     Variables    ###

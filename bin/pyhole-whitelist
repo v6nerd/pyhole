@@ -21,12 +21,12 @@ from pyhole import pyhole
 # For parsing arguments and showing --help
 import argparse
 
-# If not root, rerun as root with sudo.
+# Exit if not root.
 # Root might seem a bit excessive here, but general Linux practice is that
 # files in /etc/ can only be modified by root.  blacklist.txt and whitelist.txt
 # are best placed in /etc/pyhole, not /var/lib/pyhole, so we're only making
 # them root writeable.
-pyhole.sudo_root()
+pyhole.require_root()
 
 # Parse arguments
 

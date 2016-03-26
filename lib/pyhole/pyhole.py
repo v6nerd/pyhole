@@ -201,6 +201,19 @@ def sudo_pyhole():
     #end if getpass.getuser() != "pyhole":
 #end def sudo_pyhole():
 
+# It is poor practice to require root.  It is better to try making changes and
+# gracefully exit when they fail, perhaps with the message "Are you root?".
+# However requiring root is significantly easier to code, so we will use this for now.
+# Furthermore it is not a lot different than sudo_root() which forces root anyway.
+def require_root():
+    """Exit if not running as root."""
+    # If not root, exit.
+    if os.geteuid() != 0:
+        print("You must be root.")
+        sys.exit(1)
+    #end if os.geteuid() != 0:
+#end def require_root():
+
 ########################
 ###      Gravity     ###
 ########################
