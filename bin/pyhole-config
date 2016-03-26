@@ -287,6 +287,34 @@ def choose_webserver_password():
     return answer1
 #end def choose_webserver_password():
 
+def choose_disable_default_website(web_server):
+    """Ask the user if they are running multiple web servers."""
+    
+    # 443 is a lie right now, but we don't want another service using it
+    message = "pyhole's {0} web server requires ports 80 and 443.  If you are running another web server using one or both of these ports then you will need to disable that web server, change its ports, or ensure it is running on a different IP address to pyhole.  (You can choose pyhole's IP address later in this config.)\n\n".format(web_server)
+    
+    message += "Pyhole will not conflict with web servers that use ports other than 80 or 443, for example webmin which uses port 10000 by default.\n\n"
+    
+    message += "In particular, we need to override the default {0} website that runs on ports 80 and 443.  If you are already using the default {0} website then we won't touch it, but you will need to manually resolve IP and port binding conflicts in {0}'s configuration files yourself.\n\n".format(web_server)
+    
+    message += "Are you running another web server on {0}'s default website?  If you are unsure, choose no.".format(web_server)
+    
+    choices = [
+        ( "No"  , "Override the {0} default website.".format(web_server) ),
+        ( "Yes" , "I will fix any port / IP binding conflicts myself." )
+    ]
+    
+    button, answer = d.menu(message, choices=choices)
+    
+    check_cancel(button)
+    
+    if answer == "Yes":
+        return False
+    else:
+        return True
+    #end else:
+#end def choose_disable_default_website(web_server):
+
 ########################
 ### Networking
 
@@ -777,6 +805,7 @@ def create_htpasswd_file(password):
 #end def create_htpasswd_file(password):
 
 def install_webserver_config(web_server, interface : str, ipv4_interface, web_root_pyhole, web_root_admin, htpasswd_file):
+    """Generate and install web server configs, and enable / disable required sites and modules."""
     
     # The strings we are replacing.
     replacements = {
@@ -796,6 +825,14 @@ def install_webserver_config(web_server, interface : str, ipv4_interface, web_ro
         shutil.move(lighttpd_conf_out, lighttpd_conf_out_bak)
         
         copy_and_replace(lighttpd_conf_in, lighttpd_conf_out, replacements)
+        
+        os.system("lighty-enable-mod fastcgi fastcgi-php")
+        
+        if disable_default_website:
+            # To be implemented
+            pass
+        #end if disable_default_website:
+        
     elif web_server == "apache":
         apache_pyhole_in = os.path.join(pyhole.share_dir, 'conf/apache/pyhole.conf')
         apache_pyhole_out = '/etc/apache2/sites-available/pyhole.conf'
@@ -806,13 +843,21 @@ def install_webserver_config(web_server, interface : str, ipv4_interface, web_ro
         apache_admin_out = '/etc/apache2/sites-available/pyhole-admin.conf'
         
         copy_and_replace(apache_admin_in, apache_admin_out, replacements)
+        
+        os.system("a2enmod headers rewrite")
+        os.system("a2ensite pyhole")
+        os.system("a2ensite pyhole-admin")
+        
+        if disable_default_website:
+            os.system("a2dissite 000-default")
+        #end if disable_default_website:
     elif web_server == "Manual":
         pass
     #end elif
     
 #end def install_webserver_config(web_server):
 
-def install_webserver(web_root_pyhole, web_root_admin):
+def install_webserver_files(web_root_pyhole, web_root_admin):
     pyhole_in  = os.path.join(pyhole.share_dir, 'www/pyhole/pyhole'     )
     pyhole_out = os.path.join(web_root_pyhole , 'pyhole'                )
     admin_in   = os.path.join(pyhole.share_dir, 'www/pyhole-admin/admin')
@@ -831,19 +876,7 @@ def install_webserver(web_root_pyhole, web_root_admin):
     shutil.copytree(pyhole_in, pyhole_out)
     shutil.copytree(admin_in , admin_out )
     
-#end def install_webserver(web_root_pyhole, web_root_admin):
-
-def enable_webserver(web_server):
-    if web_server == "lighttpd":
-        os.system("lighty-enable-mod fastcgi fastcgi-php")
-    if web_server == "apache":
-        os.system("a2enmod headers rewrite")
-        os.system("a2ensite pyhole")
-        os.system("a2ensite pyhole-admin")
-    if web_server == "Manual":
-        pass
-    #end if
-#end def enable_webserver(web_server):
+#end def install_webserver_files(web_root_pyhole, web_root_admin):
 
 def set_sudoers_file_permissions():
     # Sudoers file is automatically installed by the deb package.
@@ -893,9 +926,11 @@ if web_server == 'Manual':
     okcancel(password_message)
     
     web_password_set = False
+    disable_default_website = False
 else:
     web_password = choose_webserver_password()
     web_password_set = True
+    disable_default_website = choose_disable_default_website(web_server)
 #end else:
 
 ########################
@@ -903,13 +938,13 @@ else:
 
 ip_message = """As pyhole will be running a DNS server, it is essential that its internal IP address is static.  A dynamic internal IP is not suitable.  (A DHCP reservation may work in some situations but is not recommended.)
 
-If you are running pyhole on Raspbian and have not yet modified /etc/dhcpcd.conf or /etc/network/interfaces, pyhole can set a static IPv4 address for you (though if you know how to set one manually it is recommended you configure this outside of pyhole).
+If you are running pyhole on Raspbian (e.g. on a Raspberry Pi) and have not yet modified /etc/dhcpcd.conf or /etc/network/interfaces, pyhole can set a static IPv4 address for you (though if you know how to set one manually it is recommended you configure this outside of pyhole).
 
-In all other cases, if you have not already configured a static IPv4 address you should choose Cancel now and rerun pyhole-config after you have configured a static address.  If you wish to use IPv6 then similarly you must have already configured a static IPv6 address.
+In all other cases, if you have not already configured a static IPv4 address you should choose Cancel now and configure one now before rerunning pyhole-config.  Similarly, if you wish to use IPv6, if you have not already configured a static IPv6 address then you should Cancel now and configure one first.
 
-Furthermore, if you are already running another web server, it is strongly recommended to configure a SECOND static IP address for pyhole.  If you have configured multiple IP addresses then you will be able to choose which one you use for pyhole.
+Furthermore, if you are already running another web server, you MUST allocate a SECOND static IP address for pyhole.  If you have configured multiple IP addresses then you will be able to choose which one you use for pyhole.
 
-(Note that your external IP does not matter - it can be static, dynamic, whatever.)
+(Note that all of the above refers to your server's INTERNAL IP(s).  Your external IP does not matter - it can be static, dynamic, whatever.)
 """
 
 okcancel(ip_message)
@@ -1011,8 +1046,7 @@ htpasswd_file = create_htpasswd_file(web_password)
 # Web server
 
 install_webserver_config(web_server, interface, ipv4_interface, web_root_pyhole, web_root_admin, htpasswd_file)
-install_webserver(web_root_pyhole, web_root_admin)
-enable_webserver(web_server)
+install_webserver_files(web_root_pyhole, web_root_admin)
 
 # Invoke pyhole-gravity
 pyhole.pyhole_gravity()
