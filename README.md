@@ -2,6 +2,8 @@
 
 A clone of the popular Pi-hole DNS ad-blocker.
 
+This is **not** a stable project and currently has no focus on backwards compatibility (the original Pi-hole is far better in these respects).  You have been warned!
+
 # Features
 
 - Pi-hole rewritten in Python from the ground up.
@@ -48,6 +50,7 @@ Issues in **bold** are planned to be fixed.
 - Heavily tied into Debian; won't work on a distro without apt.
 - Uses sudo againt best practices.  Used to run certain scripts as pyhole user.
 - No package in apt repository.
+- No HTTPS support.
 
 ## Regressions from Pi-hole
 
