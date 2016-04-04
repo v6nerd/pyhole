@@ -1,8 +1,6 @@
-# Pyhole
+[Pi-Hole](https://github.com/pi-hole/pi-hole) is a DNS ad-blocker.  It's awesome, but it didn't quite fit my needs, so I wrote my own clone - pyhole.
 
-A clone of the popular Pi-hole DNS ad-blocker.
-
-This is **not** a stable project and currently has no focus on backwards compatibility (the original Pi-hole is far better in these respects).  You have been warned!
+This is my own clone for my own personal use, but I thought I'd upload it to GitHub in case it's of use to anyone else.  It is not a stable project and currently has no focus on backwards compatibility (the original Pi-hole is far better in these respects).  If you're a developer, please excuse the Python code littered with PowerShell conventions ;-)
 
 # Features
 
@@ -18,10 +16,6 @@ This is **not** a stable project and currently has no focus on backwards compati
 
 # Installation
 
-## One-line installer
-
-Debatably unsafe `curl https://example.com/install.sh | sudo bash` one-line installer is coming soon...
-
 ## Manual install from GitHub
 
 1. Ensure sudo is installed by running the following as root:
@@ -36,13 +30,9 @@ Debatably unsafe `curl https://example.com/install.sh | sudo bash` one-line inst
 5.  Run pyhole-config, which will guide you through configuring pyhole.
     - `sudo pyhole-config`
 
-## Manual install from .deb
-
-Coming eventually...
-
 # Known issues and limitations
 
-Issues in **bold** are planned to be fixed.
+Issues in **bold** may be fixed eventually.
 
 ## In common with the original Pi-hole
 
