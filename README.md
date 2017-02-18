@@ -38,7 +38,7 @@ Issues in **bold** may be fixed eventually.
 
 - **No nginx support.**
 - Heavily tied into Debian; won't work on a distro without apt.
-- Uses sudo againt best practices.  Used to run certain scripts as pyhole user.
+- Uses sudo against best practices.  Used to run certain scripts as pyhole user.
 - No package in apt repository.
 - No HTTPS support.
 
